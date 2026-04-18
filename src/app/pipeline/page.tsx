@@ -1,76 +1,117 @@
 "use client";
 
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Phone, Mail, MoreHorizontal, Building2, CalendarCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Building2, User, RefreshCw, Phone } from "lucide-react";
+import type { HRContact, TwinContact, TwinAccount } from "@/lib/happyrobot";
 
-type Stage = "New" | "Engaged" | "Qualified" | "Meeting Set" | "Closed";
+type Stage = "New" | "Engaged" | "Interested" | "Quote Requested" | "Purchased";
 
-interface Lead {
+interface ContactCard {
   id: string;
-  name: string;
-  contact: string;
-  company: string;
-  industry: string;
-  score: number;
-  lastActivity: string;
-  value: string;
+  phone: string;
+  summary: string;
+  calls: number;
+  email?: string;
+  lastSeen: string;
   stage: Stage;
+  fullName?: string;
+  jobTitle?: string;
+  accountName?: string;
 }
 
-const initialLeads: Lead[] = [
-  { id: "1", name: "Stefan Maier", company: "Maier Bau GmbH", contact: "+49 89 4512 3300", industry: "Construction", score: 94, lastActivity: "Called 14:32", value: "€24,000", stage: "Meeting Set" },
-  { id: "2", name: "Julia Schneider", company: "EventPro Berlin", contact: "+49 30 8801 4422", industry: "Events", score: 88, lastActivity: "Email opened 13:11", value: "€18,500", stage: "Qualified" },
-  { id: "3", name: "Hans König", company: "Logistik König AG", contact: "+49 40 7723 9900", industry: "Logistics", score: 82, lastActivity: "Called 13:55", value: "€31,000", stage: "Engaged" },
-  { id: "4", name: "Petra Hoffmann", company: "Hoffmann Druck KG", contact: "+49 211 3341 0055", industry: "Print", score: 79, lastActivity: "VM left 12:44", value: "€9,800", stage: "Qualified" },
-  { id: "5", name: "Ralf Becker", company: "WestBau Projekt", contact: "+49 201 6612 8800", industry: "Construction", score: 75, lastActivity: "Email sent 11:30", value: "€15,200", stage: "Engaged" },
-  { id: "6", name: "Anja Fischer", company: "Fischer Events GmbH", contact: "+49 69 9988 7766", industry: "Events", score: 71, lastActivity: "Called 10:18", value: "€12,000", stage: "New" },
-  { id: "7", name: "Thomas Braun", company: "NordLogistik GmbH", contact: "+49 40 5544 3322", industry: "Logistics", score: 68, lastActivity: "Imported 09:00", value: "€22,000", stage: "New" },
-  { id: "8", name: "Sabine Müller", company: "Müller Bau AG", contact: "+49 711 2233 4455", industry: "Construction", score: 91, lastActivity: "Meeting confirmed", value: "€38,000", stage: "Closed" },
-  { id: "9", name: "Klaus Richter", company: "RheinLogistik KG", contact: "+49 221 8899 1122", industry: "Logistics", score: 85, lastActivity: "Demo scheduled", value: "€19,500", stage: "Meeting Set" },
-  { id: "10", name: "Monika Schäfer", company: "Schäfer Events", contact: "+49 89 3344 5566", industry: "Events", score: 63, lastActivity: "Email opened 08:55", value: "€7,200", stage: "New" },
-];
+function inferStage(c: HRContact): Stage {
+  const s = (c.contact_summary ?? "").toLowerCase();
+  const calls = c.interactions_count?.call ?? 0;
+  if (s.includes("purchas") || s.includes("last purchase") || s.includes("order")) return "Purchased";
+  if (s.includes("quote") || s.includes("email") || s.includes("emailed")) return "Quote Requested";
+  if (s.includes("interested") || s.includes("ready-to-buy") || s.includes("request")) return "Interested";
+  if (calls >= 2) return "Engaged";
+  return "New";
+}
 
-const stages: Stage[] = ["New", "Engaged", "Qualified", "Meeting Set", "Closed"];
+function normalizePhone(p: string) {
+  return p.replace(/[\s\-().+]/g, "");
+}
 
-const stageStyle: Record<Stage, { header: string; badge: string }> = {
-  New: { header: "bg-zinc-800", badge: "bg-zinc-700 text-zinc-300" },
-  Engaged: { header: "bg-blue-900/40", badge: "bg-blue-800/60 text-blue-300" },
-  Qualified: { header: "bg-amber-900/30", badge: "bg-amber-800/50 text-amber-300" },
-  "Meeting Set": { header: "bg-green-900/30", badge: "bg-green-800/50 text-green-300" },
-  Closed: { header: "bg-cyan-900/30", badge: "bg-cyan-800/50 text-cyan-300" },
+const stages: Stage[] = ["New", "Engaged", "Interested", "Quote Requested", "Purchased"];
+
+const stageBar: Record<Stage, string> = {
+  New: "bg-[#0f0f0f]",
+  Engaged: "bg-[#0f0f0f]",
+  Interested: "bg-[#6366f1]",
+  "Quote Requested": "bg-[#6366f1]",
+  Purchased: "bg-[#22c55e]",
 };
 
 export default function PipelinePage() {
-  const [leads, setLeads] = useState<Lead[]>(initialLeads);
+  const [cards, setCards] = useState<ContactCard[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dragging, setDragging] = useState<string | null>(null);
 
-  const handleDragStart = (id: string) => setDragging(id);
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/contacts").then((r) => r.json()) as Promise<HRContact[]>,
+      fetch("/api/twin/contacts").then((r) => r.json()) as Promise<TwinContact[]>,
+      fetch("/api/twin/accounts").then((r) => r.json()) as Promise<TwinAccount[]>,
+    ]).then(([contacts, twinContacts, twinAccounts]) => {
+      const accountMap = Object.fromEntries(twinAccounts.map((a) => [a.id, a.name]));
+      const twinByPhone = Object.fromEntries(
+        twinContacts
+          .filter((c) => c.phone)
+          .map((c) => [normalizePhone(c.phone!), c])
+      );
+
+      setCards(
+        contacts.map((c) => {
+          const twin = twinByPhone[normalizePhone(c.value)];
+          return {
+            id: c.id,
+            phone: c.value,
+            summary: c.contact_summary?.slice(0, 120) ?? "",
+            calls: c.interactions_count?.call ?? 0,
+            email: c.extracted_attributes?.email ?? twin?.email ?? undefined,
+            lastSeen: c.last_interaction_date
+              ? new Date(c.last_interaction_date).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+              : "—",
+            stage: inferStage(c),
+            fullName: twin?.full_name ?? undefined,
+            jobTitle: twin?.job_title ?? undefined,
+            accountName: twin?.account_id ? accountMap[twin.account_id] : undefined,
+          };
+        })
+      );
+      setLoading(false);
+    });
+  }, []);
+
   const handleDrop = (stage: Stage) => {
     if (!dragging) return;
-    setLeads((prev) => prev.map((l) => (l.id === dragging ? { ...l, stage } : l)));
+    setCards((prev) => prev.map((c) => (c.id === dragging ? { ...c, stage } : c)));
     setDragging(null);
   };
 
-  const byStage = (stage: Stage) => leads.filter((l) => l.stage === stage);
+  const byStage = (stage: Stage) => cards.filter((c) => c.stage === stage);
 
-  const totalValue = (stage: Stage) =>
-    byStage(stage)
-      .reduce((sum, l) => sum + parseFloat(l.value.replace(/[€,.]/g, "").replace(",", ".")), 0)
-      .toLocaleString("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen text-[#bbb] gap-2 text-[13px]">
+        <RefreshCw className="w-4 h-4 animate-spin" /> Loading contacts…
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold">Sales Pipeline</h1>
-        <p className="text-sm text-muted-foreground">Drag cards to move leads between stages</p>
+    <div className="px-7 py-6">
+      <div className="mb-5">
+        <h1 className="text-[16px] font-semibold tracking-[-0.03em] text-[#0f0f0f]">Customer Pipeline</h1>
+        <p className="text-[11px] text-[#bbb] mt-0.5">
+          {cards.length} contacts · stages inferred from AI summaries · drag to override
+        </p>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4 min-h-[calc(100vh-10rem)]">
+      <div className="flex gap-3 overflow-x-auto pb-4 min-h-[calc(100vh-10rem)]">
         {stages.map((stage) => {
-          const cards = byStage(stage);
+          const stageCards = byStage(stage);
           return (
             <div
               key={stage}
@@ -78,51 +119,75 @@ export default function PipelinePage() {
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => handleDrop(stage)}
             >
-              <div className={`flex items-center justify-between px-3 py-2 rounded-t-lg ${stageStyle[stage].header}`}>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{stage}</span>
-                  <span className={`text-xs px-1.5 py-0.5 rounded ${stageStyle[stage].badge}`}>{cards.length}</span>
+              {/* Column header */}
+              <div className="mb-2">
+                <div className={`h-[4px] rounded-[2px] w-full mb-2 ${stageBar[stage]}`} />
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[12px] font-semibold text-[#0f0f0f]">{stage}</span>
+                  <span className="text-[11px] text-[#bbb]">{stageCards.length}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">{totalValue(stage)}</span>
               </div>
 
-              <div className="flex-1 space-y-2 bg-white/[0.03] rounded-b-lg p-2 border border-t-0 border-border min-h-[200px]">
-                {cards.map((lead) => (
+              {/* Cards */}
+              <div className="flex-1 space-y-2 min-h-[200px]">
+                {stageCards.map((card) => (
                   <div
-                    key={lead.id}
+                    key={card.id}
                     draggable
-                    onDragStart={() => handleDragStart(lead.id)}
-                    className="bg-card rounded-lg p-3 ring-1 ring-foreground/10 cursor-grab active:cursor-grabbing hover:ring-foreground/20 transition-all space-y-2"
+                    onDragStart={() => setDragging(card.id)}
+                    className="bg-white rounded-[8px] p-3 border border-[#f0f0f0] cursor-grab active:cursor-grabbing hover:border-[#e0e0e0] transition-colors space-y-2"
                   >
                     <div className="flex items-start justify-between gap-1">
-                      <div>
-                        <p className="text-sm font-medium leading-tight">{lead.name}</p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                          <Building2 className="w-3 h-3" />
-                          {lead.company}
-                        </p>
+                      <div className="min-w-0">
+                        {card.fullName ? (
+                          <>
+                            <p className="text-[13px] font-medium text-[#0f0f0f] leading-tight truncate">{card.fullName}</p>
+                            <p className="text-[11px] text-[#bbb] font-mono truncate">{card.phone}</p>
+                          </>
+                        ) : (
+                          <p className="text-[13px] font-medium text-[#0f0f0f] font-mono leading-tight truncate">{card.phone}</p>
+                        )}
+                        {card.email && (
+                          <p className="text-[11px] text-[#999] truncate">{card.email}</p>
+                        )}
                       </div>
-                      <div className="text-xs font-semibold text-blue-400 shrink-0">{lead.score}</div>
+                      <div className="text-[11px] font-semibold text-[#555] shrink-0">{card.calls}×</div>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>{lead.lastActivity}</span>
-                      <span className="font-medium text-foreground">{lead.value}</span>
-                    </div>
+                    {card.accountName && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-[#999]">
+                        <Building2 className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{card.accountName}</span>
+                      </div>
+                    )}
 
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon-xs" className="h-5 w-5">
-                        <Phone className="w-3 h-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon-xs" className="h-5 w-5">
-                        <Mail className="w-3 h-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon-xs" className="h-5 w-5 ml-auto">
-                        <MoreHorizontal className="w-3 h-3" />
-                      </Button>
-                    </div>
+                    {card.jobTitle && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-[#999]">
+                        <User className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{card.jobTitle}</span>
+                      </div>
+                    )}
+
+                    {!card.fullName && !card.accountName && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-[#bbb]">
+                        <Phone className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{card.phone}</span>
+                      </div>
+                    )}
+
+                    <p className="text-[11px] text-[#999] leading-relaxed line-clamp-3">
+                      {card.summary}
+                    </p>
+
+                    <p className="text-[11px] text-[#bbb]">Last: {card.lastSeen}</p>
                   </div>
                 ))}
+
+                {stageCards.length === 0 && (
+                  <div className="border border-dashed border-[#f0f0f0] rounded-[8px] h-24 flex items-center justify-center">
+                    <p className="text-[11px] text-[#ccc]">Empty</p>
+                  </div>
+                )}
               </div>
             </div>
           );

@@ -1,291 +1,212 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronRight, Brain, MessageSquare, Search, GitBranch, CheckCircle2, AlertTriangle, Zap } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, RefreshCw } from "lucide-react";
+import type { HRRun } from "@/lib/happyrobot";
 
-interface TraceStep {
-  id: string;
-  type: "think" | "speak" | "retrieve" | "decide" | "tool" | "escalate";
-  label: string;
-  detail: string;
-  duration: string;
-  confidence?: number;
-  children?: TraceStep[];
-  outcome?: "success" | "warn" | "info";
+function formatDuration(start: string, end: string | null): string {
+  if (!end) return "—";
+  const ms = new Date(end).getTime() - new Date(start).getTime();
+  const s = Math.round(ms / 1000);
+  const m = Math.floor(s / 60);
+  return m > 0 ? `${m}m ${s % 60}s` : `${s}s`;
 }
 
-const traces: { id: string; label: string; company: string; time: string; steps: TraceStep[] }[] = [
-  {
-    id: "t1",
-    label: "Maier Bau GmbH — Meeting booked",
-    company: "Stefan Maier",
-    time: "14:26",
-    steps: [
-      {
-        id: "s1",
-        type: "retrieve",
-        label: "CRM Lookup",
-        detail: "Fetched lead profile for 'Maier Bau GmbH' — 3 previous touches, Salesforce user, annual revenue ~€4.2M, construction sector.",
-        duration: "82ms",
-        outcome: "success",
-      },
-      {
-        id: "s2",
-        type: "think",
-        label: "Persona Classification",
-        detail: "Classified as: Decision Maker (CEO). Industry: Construction. Pain points: lead tracking, CRM adoption. Tone: direct, results-oriented.",
-        duration: "140ms",
-        confidence: 92,
-        outcome: "success",
-        children: [
-          {
-            id: "s2a",
-            type: "retrieve",
-            label: "Similar lead embeddings",
-            detail: "Retrieved 8 similar construction CEO profiles. Avg. conversion: 34%. Best opener: congratulate recent project win.",
-            duration: "65ms",
-            outcome: "info",
-          },
-        ],
-      },
-      {
-        id: "s3",
-        type: "speak",
-        label: "Opening — project congratulation",
-        detail: '"Maier Bau hat zuletzt einige Großprojekte abgeschlossen – herzlichen Glückwunsch!"',
-        duration: "—",
-        outcome: "success",
-      },
-      {
-        id: "s4",
-        type: "decide",
-        label: "Response intent classification",
-        detail: 'Lead said: "Wir nutzen Excel und ein bisschen Salesforce, nicht konsequent." → Intent: "CRM pain acknowledged". Sentiment: neutral-positive.',
-        duration: "110ms",
-        confidence: 88,
-        outcome: "success",
-      },
-      {
-        id: "s5",
-        type: "think",
-        label: "Script path selection",
-        detail: 'Selected path: SALESFORCE_INTEGRATION_PITCH. Skipped: generic_value_prop (low relevance). Triggered: demo_close.',
-        duration: "95ms",
-        confidence: 85,
-        outcome: "success",
-      },
-      {
-        id: "s6",
-        type: "tool",
-        label: "Calendar availability check",
-        detail: "Queried calendar API for next week slots. Found: Tue 22 Apr 10:00, 14:00; Thu 24 Apr 09:00.",
-        duration: "210ms",
-        outcome: "success",
-      },
-      {
-        id: "s7",
-        type: "speak",
-        label: "Meeting close",
-        detail: '"Dienstag, 22. April um 10 Uhr – ich trage das ein und Sie erhalten eine Kalendereinladung."',
-        duration: "—",
-        outcome: "success",
-      },
-      {
-        id: "s8",
-        type: "tool",
-        label: "CRM update + calendar invite",
-        detail: "Updated Salesforce: stage → Meeting Set, next_action: Demo 22 Apr 10:00. Sent Google Calendar invite to stefan.maier@maierbau.de.",
-        duration: "315ms",
-        outcome: "success",
-      },
-    ],
-  },
-  {
-    id: "t2",
-    label: "EventPro Berlin — Escalation",
-    company: "Julia Schneider",
-    time: "14:14",
-    steps: [
-      {
-        id: "s1",
-        type: "retrieve",
-        label: "CRM Lookup",
-        detail: "Lead profile: EventPro Berlin, 80 employees, enterprise segment. Last contact: 3 weeks ago. Industry: Events.",
-        duration: "91ms",
-        outcome: "success",
-      },
-      {
-        id: "s2",
-        type: "think",
-        label: "Persona Classification",
-        detail: "Classified as: Head of Operations. Tone: analytical, process-driven. Likely objections: compliance, integration.",
-        duration: "130ms",
-        confidence: 78,
-        outcome: "success",
-      },
-      {
-        id: "s3",
-        type: "speak",
-        label: "Opening pitch",
-        detail: '"Wir helfen Event-Agenturen, die Gästekommunikation um bis zu 70% zu automatisieren."',
-        duration: "—",
-        outcome: "success",
-      },
-      {
-        id: "s4",
-        type: "decide",
-        label: "Objection classification",
-        detail: 'Lead raised: "laufendes Datenschutzaudit — DSGVO-konform?" → Objection type: COMPLIANCE_DETAIL. Confidence agent can handle: 41% (below threshold 60%).',
-        duration: "145ms",
-        confidence: 41,
-        outcome: "warn",
-      },
-      {
-        id: "s5",
-        type: "escalate",
-        label: "Escalation triggered",
-        detail: "Compliance objection confidence below threshold. Escalation rule: COMPLIANCE_EXPERT_HANDOFF. Human SDR notified via Slack.",
-        duration: "88ms",
-        outcome: "warn",
-      },
-    ],
-  },
-];
-
-const typeIcon: Record<TraceStep["type"], React.ReactNode> = {
-  think: <Brain className="w-3.5 h-3.5" />,
-  speak: <MessageSquare className="w-3.5 h-3.5" />,
-  retrieve: <Search className="w-3.5 h-3.5" />,
-  decide: <GitBranch className="w-3.5 h-3.5" />,
-  tool: <Zap className="w-3.5 h-3.5" />,
-  escalate: <AlertTriangle className="w-3.5 h-3.5" />,
-};
-
-const typeColor: Record<TraceStep["type"], string> = {
-  think: "text-purple-400 bg-purple-400/10",
-  speak: "text-blue-400 bg-blue-400/10",
-  retrieve: "text-cyan-400 bg-cyan-400/10",
-  decide: "text-amber-400 bg-amber-400/10",
-  tool: "text-green-400 bg-green-400/10",
-  escalate: "text-red-400 bg-red-400/10",
-};
-
-const outcomeIcon: Record<string, React.ReactNode> = {
-  success: <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />,
-  warn: <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />,
-  info: <Zap className="w-3.5 h-3.5 text-blue-400" />,
-};
-
-function StepRow({ step, depth = 0 }: { step: TraceStep; depth?: number }) {
-  const [open, setOpen] = useState(false);
-  const hasChildren = step.children && step.children.length > 0;
-
-  return (
-    <div>
-      <div
-        className={`flex items-start gap-3 py-2.5 px-3 rounded-lg hover:bg-white/[0.03] cursor-pointer group ${depth > 0 ? "ml-6" : ""}`}
-        onClick={() => hasChildren && setOpen((v) => !v)}
-      >
-        <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
-          {hasChildren ? (
-            open ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
-          ) : (
-            <div className="w-3.5" />
-          )}
-          <div className={`flex items-center justify-center w-6 h-6 rounded ${typeColor[step.type]}`}>
-            {typeIcon[step.type]}
-          </div>
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-medium">{step.label}</span>
-            <span className={`text-xs px-1.5 py-0.5 rounded font-mono ${typeColor[step.type]}`}>{step.type}</span>
-            {step.confidence !== undefined && (
-              <span className={`text-xs ${step.confidence >= 60 ? "text-green-400" : "text-amber-400"}`}>
-                {step.confidence}% confidence
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{step.detail}</p>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          {step.outcome && outcomeIcon[step.outcome]}
-          <span className="text-xs text-muted-foreground font-mono">{step.duration}</span>
-        </div>
-      </div>
-
-      {open && hasChildren && (
-        <div className="border-l border-border ml-9">
-          {step.children!.map((child) => (
-            <StepRow key={child.id} step={child} depth={depth + 1} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 export default function TracePage() {
-  const [selectedTrace, setSelectedTrace] = useState("t1");
-  const trace = traces.find((t) => t.id === selectedTrace)!;
+  const [runs, setRuns] = useState<HRRun[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/runs")
+      .then((r) => r.json())
+      .then((data: HRRun[]) => {
+        setRuns(data);
+        if (data.length > 0) setSelected(data[0].id);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const run = runs.find((r) => r.id === selected);
+
+  const completed = runs.filter((r) => r.status === "completed").length;
+  const failed = runs.filter((r) => r.status === "failed").length;
+  const avgTokens =
+    runs.length > 0
+      ? Math.round(runs.reduce((s, r) => s + r.input_tokens + r.output_tokens, 0) / runs.length)
+      : 0;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen text-[#bbb] gap-2 text-[13px]">
+        <RefreshCw className="w-4 h-4 animate-spin" /> Loading runs…
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="px-7 py-6 space-y-5">
       <div>
-        <h1 className="text-xl font-semibold">Agent Decision Trace</h1>
-        <p className="text-sm text-muted-foreground">Step-by-step reasoning for each call</p>
+        <h1 className="text-[16px] font-semibold tracking-[-0.03em] text-[#0f0f0f]">Agent Run Log</h1>
+        <p className="text-[11px] text-[#bbb] mt-0.5">
+          Phone agent execution history · {runs.length} total runs
+        </p>
       </div>
 
-      <div className="flex gap-2 flex-wrap">
-        {traces.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setSelectedTrace(t.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-              selectedTrace === t.id
-                ? "bg-blue-600 border-blue-600 text-white"
-                : "bg-transparent border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      <Card>
-        <CardHeader className="border-b border-border">
-          <div className="flex items-center justify-between">
+      {/* Summary stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card>
+          <CardContent className="pt-4 pb-4 px-[18px] flex items-center gap-3">
+            <CheckCircle2 className="w-4 h-4 text-[#22c55e] shrink-0" />
             <div>
-              <CardTitle>{trace.label}</CardTitle>
-              <p className="text-sm text-muted-foreground mt-0.5">{trace.company} · {trace.time}</p>
+              <p className="text-[11px] font-medium text-[#999] uppercase tracking-[0.02em]">Completed</p>
+              <p className="text-[26px] font-semibold tracking-[-0.04em] text-[#0f0f0f] leading-none mt-1">{completed}</p>
             </div>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-400"></span> Think</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400"></span> Speak</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-cyan-400"></span> Retrieve</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400"></span> Decide</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400"></span> Tool</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400"></span> Escalate</span>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4 px-[18px] flex items-center gap-3">
+            <XCircle className="w-4 h-4 text-[#ef4444] shrink-0" />
+            <div>
+              <p className="text-[11px] font-medium text-[#999] uppercase tracking-[0.02em]">Agent Errors</p>
+              <p className="text-[26px] font-semibold tracking-[-0.04em] text-[#0f0f0f] leading-none mt-1">{failed}</p>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-2">
-          <div className="space-y-0.5">
-            {trace.steps.map((step, i) => (
-              <div key={step.id} className="relative">
-                {i < trace.steps.length - 1 && (
-                  <div className="absolute left-[2.375rem] top-9 bottom-0 w-px bg-border z-0" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4 px-[18px] flex items-center gap-3">
+            <div className="w-4 h-4 rounded-full bg-[#6366f1] shrink-0" />
+            <div>
+              <p className="text-[11px] font-medium text-[#999] uppercase tracking-[0.02em]">Avg Tokens / Run</p>
+              <p className="text-[26px] font-semibold tracking-[-0.04em] text-[#0f0f0f] leading-none mt-1">{avgTokens.toLocaleString()}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        {/* Run list */}
+        <div className="col-span-1 space-y-1 max-h-[600px] overflow-y-auto pr-1">
+          {runs.map((r) => (
+            <button
+              key={r.id}
+              onClick={() => setSelected(r.id)}
+              className={`w-full text-left px-3 py-2.5 rounded-[8px] border text-[13px] transition-colors ${
+                selected === r.id
+                  ? "bg-[#f5f5f5] border-[#e0e0e0] text-[#0f0f0f]"
+                  : "bg-white border-[#f0f0f0] hover:bg-[#fafafa] text-[#555]"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-0.5">
+                {r.status === "completed" ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#22c55e] shrink-0" />
+                ) : (
+                  <XCircle className="w-3.5 h-3.5 text-[#ef4444] shrink-0" />
                 )}
-                <StepRow step={step} />
+                <span className="font-mono text-[12px] truncate">{r.id.slice(0, 8)}…</span>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              <div className="flex items-center justify-between text-[11px] text-[#bbb]">
+                <span>{formatTime(r.timestamp)}</span>
+                <span>{(r.input_tokens + r.output_tokens).toLocaleString()} tok</span>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Run detail */}
+        <div className="col-span-2">
+          {run ? (
+            <Card>
+              <CardHeader className="border-b border-[#f0f0f0]">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="font-mono text-[12px] text-[#999]">{run.id}</CardTitle>
+                  <span
+                    className={`text-[11px] px-2 py-1 rounded border ${
+                      run.status === "completed"
+                        ? "text-[#16a34a] border-[#bbf7d0]"
+                        : "text-[#dc2626] border-[#fecaca]"
+                    }`}
+                  >
+                    {run.status}
+                  </span>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-5">
+                <div className="grid grid-cols-2 gap-4 text-[13px]">
+                  <div>
+                    <p className="text-[11px] text-[#bbb] mb-1">Started</p>
+                    <p className="font-medium text-[#0f0f0f]">{new Date(run.timestamp).toLocaleString("en-GB")}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-[#bbb] mb-1">Completed</p>
+                    <p className="font-medium text-[#0f0f0f]">
+                      {run.completed_at ? new Date(run.completed_at).toLocaleString("en-GB") : "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-[#bbb] mb-1">Duration</p>
+                    <p className="font-medium text-[#0f0f0f] flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-[#bbb]" />
+                      {formatDuration(run.timestamp, run.completed_at)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-[#bbb] mb-1">Environment</p>
+                    <p className="font-medium text-[#0f0f0f] capitalize">{run.execution_environment ?? "production"}</p>
+                  </div>
+                </div>
+
+                <div className="border-t border-[#f0f0f0] pt-4">
+                  <p className="text-[11px] text-[#bbb] uppercase tracking-[0.02em] mb-3">Token Usage</p>
+                  <div className="space-y-3">
+                    {[
+                      { label: "Input tokens", value: run.input_tokens, color: "#6366f1" },
+                      { label: "Output tokens", value: run.output_tokens, color: "#a5b4fc" },
+                    ].map((t) => {
+                      const total = run.input_tokens + run.output_tokens || 1;
+                      return (
+                        <div key={t.label} className="space-y-1.5">
+                          <div className="flex justify-between text-[12px]">
+                            <span className="text-[#999]">{t.label}</span>
+                            <span className="font-medium text-[#0f0f0f]">{t.value.toLocaleString()}</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-[#f0f0f0]">
+                            <div
+                              className="h-1.5 rounded-full transition-all"
+                              style={{ width: `${(t.value / total) * 100}%`, backgroundColor: t.color }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <p className="text-[11px] text-[#bbb] pt-1">
+                      Total: {(run.input_tokens + run.output_tokens).toLocaleString()} tokens
+                    </p>
+                  </div>
+                </div>
+
+                <div className="border-t border-[#f0f0f0] pt-4">
+                  <p className="text-[11px] text-[#bbb] uppercase tracking-[0.02em] mb-2">IDs</p>
+                  <div className="space-y-1 font-mono text-[11px] text-[#bbb]">
+                    <p>run: {run.id}</p>
+                    <p>use_case: {run.use_case_id}</p>
+                    <p>version: {run.version_id}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="flex items-center justify-center h-64 text-[13px] text-[#bbb]">
+              Select a run to view details
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

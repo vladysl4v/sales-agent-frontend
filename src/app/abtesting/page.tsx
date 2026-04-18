@@ -1,10 +1,9 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from "recharts";
-import { TrendingUp, Pause, Play, RotateCcw, Trophy, FlaskConical } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { TrendingUp, Pause, Play, Trophy, FlaskConical } from "lucide-react";
 
 const weeklyTrend = [
   { day: "Mo", a: 18, b: 19 },
@@ -84,17 +83,22 @@ const tests = [
   },
 ];
 
+const tooltipStyle = {
+  contentStyle: { background: "#ffffff", border: "1px solid #f0f0f0", borderRadius: 8, fontSize: 12, color: "#0f0f0f" },
+  cursor: { fill: "rgba(0,0,0,0.03)" },
+};
+
 function StatPill({ label, a, b, unit = "%", higherIsBetter = true }: { label: string; a: number; b: number; unit?: string; higherIsBetter?: boolean }) {
   const aWins = higherIsBetter ? a > b : a < b;
   const diff = Math.abs(b - a).toFixed(1);
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <div className="flex items-center gap-3">
-        <span className={`text-sm font-semibold ${!aWins ? "text-muted-foreground" : "text-foreground"}`}>{a}{unit}</span>
-        <span className="text-xs text-muted-foreground">vs</span>
-        <span className={`text-sm font-semibold ${aWins ? "text-muted-foreground" : "text-green-400"}`}>{b}{unit}</span>
-        <span className={`text-xs px-1.5 py-0.5 rounded ${!aWins ? "bg-green-500/15 text-green-400" : "bg-red-500/10 text-red-400"}`}>
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[11px] font-medium text-[#999] uppercase tracking-[0.02em]">{label}</span>
+      <div className="flex items-center gap-2">
+        <span className={`text-[13px] font-semibold ${!aWins ? "text-[#bbb]" : "text-[#0f0f0f]"}`}>{a}{unit}</span>
+        <span className="text-[11px] text-[#bbb]">vs</span>
+        <span className={`text-[13px] font-semibold ${aWins ? "text-[#bbb]" : "text-[#0f0f0f]"}`}>{b}{unit}</span>
+        <span className={`text-[11px] font-medium ${!aWins ? "text-[#16a34a]" : "text-[#dc2626]"}`}>
           {!aWins ? `+${diff}${unit}` : `-${diff}${unit}`} B
         </span>
       </div>
@@ -107,14 +111,14 @@ export default function ABTestingPage() {
   const { a, b } = activeTest.variants;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="px-7 py-6 space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold">A/B Testing</h1>
-          <p className="text-sm text-muted-foreground">Compare agent script variants and messaging strategies</p>
+          <h1 className="text-[16px] font-semibold tracking-[-0.03em] text-[#0f0f0f]">A/B Testing</h1>
+          <p className="text-[11px] text-[#bbb] mt-0.5">Compare agent script variants and messaging strategies</p>
         </div>
         <Button size="sm" variant="outline">
-          <FlaskConical className="w-4 h-4 mr-1" />
+          <FlaskConical className="w-3.5 h-3.5 mr-1" />
           New Test
         </Button>
       </div>
@@ -122,20 +126,29 @@ export default function ABTestingPage() {
       {/* Test list */}
       <div className="flex flex-col gap-2">
         {tests.map((test) => (
-          <div key={test.id} className={`flex items-center gap-4 p-4 rounded-xl border ${test.id === activeTest.id ? "border-blue-500/50 bg-blue-500/5" : "border-border bg-card"}`}>
+          <div
+            key={test.id}
+            className={`flex items-center gap-4 p-4 rounded-[10px] border transition-colors ${
+              test.id === activeTest.id ? "border-[#e0e0e0] bg-white" : "border-[#f0f0f0] bg-white"
+            }`}
+          >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{test.name}</span>
+                <span className="text-[13px] font-medium text-[#0f0f0f]">{test.name}</span>
                 {test.winner && (
-                  <span className="flex items-center gap-1 text-xs text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">
+                  <span className="flex items-center gap-1 text-[11px] text-[#16a34a]">
                     <Trophy className="w-3 h-3" /> Variant {test.winner} leading
                   </span>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">Started {test.started} · {test.calls} calls</p>
+              <p className="text-[11px] text-[#bbb] mt-0.5">Started {test.started} · {test.calls} calls</p>
             </div>
             <div className="flex items-center gap-2">
-              <span className={`text-xs px-2 py-1 rounded border ${test.status === "running" ? "bg-green-500/15 text-green-400 border-green-500/30" : "bg-zinc-500/15 text-zinc-400 border-zinc-500/30"}`}>
+              <span className={`text-[11px] px-2 py-1 rounded border ${
+                test.status === "running"
+                  ? "text-[#16a34a] border-[#bbf7d0]"
+                  : "text-[#999] border-[#f0f0f0]"
+              }`}>
                 {test.status === "running" ? "Running" : "Paused"}
               </span>
               <Button size="icon-sm" variant="ghost">
@@ -148,50 +161,58 @@ export default function ABTestingPage() {
 
       {/* Active test detail */}
       <div className="space-y-4">
-        <h2 className="text-base font-semibold">{activeTest.name}</h2>
+        <h2 className="text-[14px] font-semibold tracking-[-0.02em] text-[#0f0f0f]">{activeTest.name}</h2>
 
         {/* Variant cards */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {([["a", a], ["b", b]] as const).map(([key, variant]) => (
-            <Card key={key} className={key === "b" ? "ring-2 ring-green-500/40" : ""}>
+            <Card key={key} className={key === "b" ? "border-[#bbf7d0]" : ""}>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">{variant.name}</CardTitle>
+                  <CardTitle>{variant.name}</CardTitle>
                   {key === "b" && (
-                    <span className="flex items-center gap-1 text-xs text-green-400 bg-green-400/10 px-2 py-0.5 rounded">
+                    <span className="flex items-center gap-1 text-[11px] text-[#16a34a]">
                       <Trophy className="w-3 h-3" /> Leading
                     </span>
                   )}
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="bg-muted/40 rounded-lg px-3 py-2 text-xs text-muted-foreground italic leading-relaxed">
+                <div className="bg-[#fafafa] rounded-[8px] px-3 py-2 text-[12px] text-[#999] italic leading-relaxed border border-[#f0f0f0]">
                   "{variant.opener}"
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   <div>
-                    <p className="text-xs text-muted-foreground">Calls</p>
-                    <p className="text-lg font-bold">{variant.calls}</p>
+                    <p className="text-[11px] text-[#bbb] uppercase tracking-[0.02em] mb-1">Calls</p>
+                    <p className="text-[20px] font-semibold tracking-[-0.04em] text-[#0f0f0f]">{variant.calls}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Engage Rate</p>
-                    <p className={`text-lg font-bold ${key === "b" && b.engageRate > a.engageRate ? "text-green-400" : ""}`}>{variant.engageRate}%</p>
+                    <p className="text-[11px] text-[#bbb] uppercase tracking-[0.02em] mb-1">Engage Rate</p>
+                    <p className={`text-[20px] font-semibold tracking-[-0.04em] ${key === "b" && b.engageRate > a.engageRate ? "text-[#16a34a]" : "text-[#0f0f0f]"}`}>
+                      {variant.engageRate}%
+                    </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Qualify Rate</p>
-                    <p className={`text-lg font-bold ${key === "b" && b.qualifyRate > a.qualifyRate ? "text-green-400" : ""}`}>{variant.qualifyRate}%</p>
+                    <p className="text-[11px] text-[#bbb] uppercase tracking-[0.02em] mb-1">Qualify Rate</p>
+                    <p className={`text-[20px] font-semibold tracking-[-0.04em] ${key === "b" && b.qualifyRate > a.qualifyRate ? "text-[#16a34a]" : "text-[#0f0f0f]"}`}>
+                      {variant.qualifyRate}%
+                    </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Meeting Rate</p>
-                    <p className={`text-lg font-bold ${key === "b" && b.meetingRate > a.meetingRate ? "text-green-400" : ""}`}>{variant.meetingRate}%</p>
+                    <p className="text-[11px] text-[#bbb] uppercase tracking-[0.02em] mb-1">Meeting Rate</p>
+                    <p className={`text-[20px] font-semibold tracking-[-0.04em] ${key === "b" && b.meetingRate > a.meetingRate ? "text-[#16a34a]" : "text-[#0f0f0f]"}`}>
+                      {variant.meetingRate}%
+                    </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Avg. Duration</p>
-                    <p className="text-sm font-medium">{variant.avgDuration}</p>
+                    <p className="text-[11px] text-[#bbb] uppercase tracking-[0.02em] mb-1">Avg. Duration</p>
+                    <p className="text-[13px] font-medium text-[#0f0f0f]">{variant.avgDuration}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Sentiment Score</p>
-                    <p className={`text-sm font-medium ${variant.sentiment >= 80 ? "text-green-400" : "text-amber-400"}`}>{variant.sentiment}/100</p>
+                    <p className="text-[11px] text-[#bbb] uppercase tracking-[0.02em] mb-1">Sentiment</p>
+                    <p className={`text-[13px] font-medium ${variant.sentiment >= 80 ? "text-[#16a34a]" : "text-[#999]"}`}>
+                      {variant.sentiment}/100
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -200,7 +221,7 @@ export default function ABTestingPage() {
         </div>
 
         {/* Charts */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <Card>
             <CardHeader>
               <CardTitle>Engagement Rate Trend</CardTitle>
@@ -209,15 +230,11 @@ export default function ABTestingPage() {
             <CardContent>
               <ResponsiveContainer width="100%" height={180}>
                 <LineChart data={weeklyTrend}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="day" tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} unit="%" />
-                  <Tooltip
-                    contentStyle={{ background: "#18181b", border: "1px solid #27272a", borderRadius: 8, fontSize: 12 }}
-                    cursor={{ stroke: "rgba(255,255,255,0.08)" }}
-                  />
-                  <Line dataKey="a" name="Variant A" stroke="#71717a" strokeWidth={2} dot={false} />
-                  <Line dataKey="b" name="Variant B" stroke="#10b981" strokeWidth={2} dot={false} />
+                  <XAxis dataKey="day" tick={{ fontSize: 9, fill: "#ccc" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 9, fill: "#ccc" }} axisLine={false} tickLine={false} unit="%" />
+                  <Tooltip {...tooltipStyle} cursor={{ stroke: "rgba(0,0,0,0.06)" }} />
+                  <Line dataKey="a" name="Variant A" stroke="#bbb" strokeWidth={1.5} dot={false} />
+                  <Line dataKey="b" name="Variant B" stroke="#22c55e" strokeWidth={1.5} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -230,15 +247,12 @@ export default function ABTestingPage() {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={funnelComparison} barGap={4}>
-                  <XAxis dataKey="stage" tick={{ fontSize: 11, fill: "#71717a" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12, fill: "#71717a" }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{ background: "#18181b", border: "1px solid #27272a", borderRadius: 8, fontSize: 12 }}
-                    cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                  />
-                  <Bar dataKey="a" name="Variant A" fill="#71717a" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="b" name="Variant B" fill="#10b981" radius={[4, 4, 0, 0]} />
+                <BarChart data={funnelComparison} barGap={3}>
+                  <XAxis dataKey="stage" tick={{ fontSize: 9, fill: "#ccc" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 9, fill: "#ccc" }} axisLine={false} tickLine={false} />
+                  <Tooltip {...tooltipStyle} />
+                  <Bar dataKey="a" name="Variant A" fill="#e0e0e0" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="b" name="Variant B" fill="#22c55e" radius={[2, 2, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -258,8 +272,8 @@ export default function ABTestingPage() {
               <StatPill label="Meeting Rate" a={a.meetingRate} b={b.meetingRate} />
               <StatPill label="Sentiment Score" a={a.sentiment} b={b.sentiment} unit="" />
             </div>
-            <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-              <p className="text-sm text-green-400 font-medium flex items-center gap-2">
+            <div className="mt-4 p-3 bg-[#f0fdf4] border border-[#bbf7d0] rounded-[8px]">
+              <p className="text-[13px] text-[#16a34a] font-medium flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
                 Recommendation: Promote Variant B — congratulations opener shows +59% engage rate lift with p &lt; 0.05 significance
               </p>
