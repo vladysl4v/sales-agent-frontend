@@ -104,114 +104,116 @@ export default async function DashboardPage() {
     .map((r, i) => ({ i: i + 1, tokens: r.input_tokens + r.output_tokens, status: r.status }));
 
   return (
-    <div className="px-7 py-6 space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div>
+      {/* Topbar */}
+      <div className="sticky top-0 z-10 h-14 bg-white border-b border-[#DFE1E6] px-8 flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-[16px] font-semibold tracking-[-0.03em] text-[#0f0f0f]">Dashboard</h1>
-          <p className="text-[11px] text-[#bbb] mt-0.5">
+          <h1 className="text-[20px] font-semibold text-[#172B4D]">Dashboard</h1>
+          <p className="text-[12px] text-[#6B778C] mt-0.5">
             {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
           </p>
         </div>
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#f0fdf4] border border-[#bbf7d0] text-[11px] font-medium text-[#15803d]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] inline-block" />
+        <div className="flex items-center gap-1.5 text-[12px] font-medium text-[#00875A]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#00875A] inline-block" />
           Live
         </div>
       </div>
 
-      {/* KPI cards */}
-      <div className="grid grid-cols-4 gap-3">
-        {metrics.map((m) => (
-          <Card key={m.label}>
-            <CardContent className="pt-4 pb-4 px-[18px]">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[11px] font-medium text-[#999] uppercase tracking-[0.02em] mb-2">{m.label}</p>
-                  <p className="text-[26px] font-semibold tracking-[-0.04em] text-[#0f0f0f] leading-none">{m.value}</p>
-                  <p className={`text-[11px] font-medium mt-1.5 ${m.positive ? "text-[#16a34a]" : "text-[#dc2626]"}`}>
-                    {m.sub}
-                  </p>
+      <div className="px-8 py-6 space-y-4">
+        {/* KPI cards */}
+        <div className="grid grid-cols-4 gap-4">
+          {metrics.map((m) => (
+            <Card key={m.label}>
+              <CardContent className="pt-4 pb-4 px-[18px]">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#6B778C] uppercase tracking-[0.04em] mb-2">{m.label}</p>
+                    <p className="text-[28px] font-bold text-[#172B4D] leading-none">{m.value}</p>
+                    <p className={`text-[12px] font-medium mt-1.5 ${m.positive ? "text-[#00875A]" : "text-[#DE350B]"}`}>
+                      {m.sub}
+                    </p>
+                  </div>
+                  <m.icon className="w-4 h-4 text-[#6B778C] mt-0.5 shrink-0" />
                 </div>
-                <m.icon className="w-4 h-4 text-[#bbb] mt-0.5 shrink-0" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Charts */}
+        <DashboardCharts
+          hourlyData={hourlyData}
+          tokenData={tokenData}
+          avgTokens={avgTokens}
+          totalCalls={totalCalls}
+          totalRuns={runs.length}
+        />
+
+        {/* Bottom row */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Top pitched tires */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Top Pitched Tires</CardTitle>
+              <CardDescription>Products most frequently in active threads</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {topProducts.map(({ id, count }, i) => {
+                  const purchased = purchases.find((p) => p.product_id === id);
+                  const revenue = purchased ? parseFloat(purchased.total) : null;
+                  return (
+                    <div key={id} className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-[11px] text-[#6B778C] w-4 shrink-0 tabular-nums">{i + 1}</span>
+                        <div className="min-w-0">
+                          <p className="text-[13px] text-[#172B4D] font-medium font-mono truncate">{id}</p>
+                          {revenue !== null && !isNaN(revenue) && (
+                            <p className="text-[11px] text-[#00875A]">€{revenue.toLocaleString("de-DE")} confirmed</p>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-[11px] text-[#6B778C] shrink-0">{count} thread{count !== 1 ? "s" : ""}</span>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
 
-      {/* Charts */}
-      <DashboardCharts
-        hourlyData={hourlyData}
-        tokenData={tokenData}
-        avgTokens={avgTokens}
-        totalCalls={totalCalls}
-        totalRuns={runs.length}
-      />
-
-      {/* Bottom row */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Top pitched tires */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Pitched Tires</CardTitle>
-            <CardDescription>Products most frequently in active threads</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {topProducts.map(({ id, count }, i) => {
-                const purchased = purchases.find((p) => p.product_id === id);
-                const revenue = purchased ? parseFloat(purchased.total) : null;
-                return (
-                  <div key={id} className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-[11px] text-[#bbb] w-4 shrink-0 tabular-nums">{i + 1}</span>
-                      <div className="min-w-0">
-                        <p className="text-[13px] text-[#0f0f0f] font-medium font-mono truncate">{id}</p>
-                        {revenue !== null && !isNaN(revenue) && (
-                          <p className="text-[11px] text-[#16a34a]">€{revenue.toLocaleString("de-DE")} confirmed</p>
-                        )}
-                      </div>
+          {/* Activity log */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Activity Log</CardTitle>
+              <CardDescription>Recent AI agent interactions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-0">
+                {allInteractions.map((item, i) => (
+                  <div key={item.id} className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 bg-[#0052CC]" />
+                      {i < allInteractions.length - 1 && (
+                        <div className="w-px flex-1 bg-[#DFE1E6] my-1" />
+                      )}
                     </div>
-                    <span className="text-[11px] text-[#999] shrink-0">{count} thread{count !== 1 ? "s" : ""}</span>
+                    <div className="pb-3">
+                      <p className="text-[11px] text-[#6B778C] mb-0.5">
+                        {new Date(item.timestamp).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                        {" · "}
+                        {item.channel}
+                      </p>
+                      <p className="text-[13px] text-[#172B4D] line-clamp-2">{item.interaction_summary}</p>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Activity log */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Activity Log</CardTitle>
-            <CardDescription>Recent AI agent interactions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-0">
-              {allInteractions.map((item, i) => (
-                <div key={item.id} className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 bg-[#0f0f0f]" />
-                    {i < allInteractions.length - 1 && (
-                      <div className="w-px flex-1 bg-[#f7f7f7] my-1" />
-                    )}
-                  </div>
-                  <div className="pb-3">
-                    <p className="text-[11px] text-[#bbb] mb-0.5">
-                      {new Date(item.timestamp).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
-                      {" · "}
-                      {item.channel}
-                    </p>
-                    <p className="text-[13px] text-[#555] line-clamp-2">{item.interaction_summary}</p>
-                  </div>
-                </div>
-              ))}
-              {allInteractions.length === 0 && (
-                <p className="text-[13px] text-[#bbb]">No recent interactions.</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+                {allInteractions.length === 0 && (
+                  <p className="text-[13px] text-[#6B778C]">No recent interactions.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

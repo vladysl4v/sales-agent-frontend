@@ -44,38 +44,38 @@
 }
 
 :root {
-  --background: #fafafa;
-  --foreground: #0f0f0f;
+  --background: #F4F5F7;
+  --foreground: #172B4D;
   --card: #ffffff;
-  --card-foreground: #0f0f0f;
+  --card-foreground: #172B4D;
   --popover: #ffffff;
-  --popover-foreground: #0f0f0f;
-  --primary: #0f0f0f;
+  --popover-foreground: #172B4D;
+  --primary: #0052CC;
   --primary-foreground: #ffffff;
-  --secondary: #f5f5f5;
-  --secondary-foreground: #0f0f0f;
-  --muted: #f5f5f5;
-  --muted-foreground: #999999;
-  --accent: #f5f5f5;
-  --accent-foreground: #0f0f0f;
-  --destructive: #ef4444;
-  --border: #f0f0f0;
-  --input: #f0f0f0;
-  --ring: #bbbbbb;
-  --chart-1: #0f0f0f;
-  --chart-2: #6366f1;
-  --chart-3: #22c55e;
-  --chart-4: #fca5a5;
-  --chart-5: #bbbbbb;
-  --radius: 0.625rem;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #0f0f0f;
-  --sidebar-primary: #0f0f0f;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f5f5f5;
-  --sidebar-accent-foreground: #0f0f0f;
-  --sidebar-border: #f0f0f0;
-  --sidebar-ring: #bbbbbb;
+  --secondary: #F4F5F7;
+  --secondary-foreground: #172B4D;
+  --muted: #F4F5F7;
+  --muted-foreground: #6B778C;
+  --accent: #F4F5F7;
+  --accent-foreground: #172B4D;
+  --destructive: #DE350B;
+  --border: #DFE1E6;
+  --input: #DFE1E6;
+  --ring: #0052CC;
+  --chart-1: #0052CC;
+  --chart-2: #0052CC;
+  --chart-3: #00875A;
+  --chart-4: #DE350B;
+  --chart-5: #6B778C;
+  --radius: 0.1875rem;
+  --sidebar: #0052CC;
+  --sidebar-foreground: rgba(255, 255, 255, 0.85);
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #0052CC;
+  --sidebar-accent: rgba(255, 255, 255, 0.15);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: rgba(255, 255, 255, 0.3);
 }
 
 @layer base {
@@ -84,6 +84,6 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: system-ui, -apple-system, 'Inter', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 }

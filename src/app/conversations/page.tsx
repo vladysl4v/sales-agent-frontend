@@ -56,35 +56,35 @@ export default function ConversationsPage() {
   }, [selected, loadDetail]);
 
   return (
-    <div className="flex h-screen bg-[#fafafa]">
+    <div className="flex h-screen bg-[#F4F5F7]">
       {/* Contact list */}
-      <div className="w-72 shrink-0 border-r border-[#f0f0f0] flex flex-col bg-white">
-        <div className="px-5 py-5 border-b border-[#f0f0f0]">
-          <h1 className="text-[16px] font-semibold tracking-[-0.03em] text-[#0f0f0f]">Conversations</h1>
-          <p className="text-[11px] text-[#bbb] mt-0.5">
+      <div className="w-72 shrink-0 border-r border-[#DFE1E6] flex flex-col bg-white">
+        <div className="px-5 h-14 border-b border-[#DFE1E6] flex flex-col justify-center shrink-0">
+          <h1 className="text-[20px] font-semibold text-[#172B4D]">Conversations</h1>
+          <p className="text-[12px] text-[#6B778C] mt-0.5">
             {loadingContacts ? "Loading…" : `${contacts.length} contacts`}
           </p>
         </div>
-        <div className="flex-1 overflow-y-auto divide-y divide-[#f0f0f0]">
+        <div className="flex-1 overflow-y-auto divide-y divide-[#DFE1E6]">
           {contacts.map((c) => (
             <button
               key={c.id}
               onClick={() => setSelected(c.id)}
-              className={`w-full text-left px-5 py-3.5 transition-colors ${selected === c.id ? "bg-[#f5f5f5]" : "hover:bg-[#fafafa]"}`}
+              className={`w-full text-left px-5 py-3.5 transition-colors ${selected === c.id ? "bg-[#DEEBFF]" : "hover:bg-[#F4F5F7]"}`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-[13px] font-medium text-[#0f0f0f] truncate font-mono">{c.value}</p>
-                  <p className="text-[11px] text-[#999] truncate mt-0.5 leading-relaxed">
-                    {c.contact_summary?.slice(0, 70)}…
+                  <p className="text-[13px] font-medium text-[#172B4D] truncate font-mono">{c.value}</p>
+                  <p className="text-[11px] text-[#6B778C] truncate mt-0.5 leading-relaxed">
+                    {c.contact_summary?.slice(0, 70) ?? ""}…
                   </p>
                 </div>
               </div>
               <div className="mt-1.5 flex items-center justify-between">
-                <span className="text-[11px] px-1.5 py-0.5 rounded border border-[#f0f0f0] text-[#555]">
+                <span className="text-[11px] px-1.5 py-0.5 rounded-[3px] border border-[#DFE1E6] text-[#6B778C]">
                   {totalCalls(c)} calls
                 </span>
-                <span className="text-[11px] text-[#bbb] flex items-center gap-1">
+                <span className="text-[11px] text-[#6B778C] flex items-center gap-1">
                   <Clock className="w-3 h-3" /> {lastSeenLabel(c)}
                 </span>
               </div>
@@ -96,7 +96,7 @@ export default function ConversationsPage() {
       {/* Detail panel */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {loadingDetail && (
-          <div className="flex items-center justify-center h-full text-[#bbb] gap-2 text-[13px]">
+          <div className="flex items-center justify-center h-full text-[#6B778C] gap-2 text-[13px]">
             <RefreshCw className="w-4 h-4 animate-spin" />
             Loading…
           </div>
@@ -105,22 +105,22 @@ export default function ConversationsPage() {
         {!loadingDetail && detail && (
           <>
             {/* Header */}
-            <div className="px-7 py-5 border-b border-[#f0f0f0] bg-white flex items-start justify-between">
+            <div className="px-8 h-14 border-b border-[#DFE1E6] bg-white flex items-center justify-between shrink-0">
               <div>
-                <h2 className="text-[15px] font-semibold tracking-[-0.02em] text-[#0f0f0f] font-mono">{detail.value}</h2>
-                <p className="text-[11px] text-[#bbb] mt-0.5">
+                <h2 className="text-[15px] font-semibold text-[#172B4D] font-mono">{detail.value}</h2>
+                <p className="text-[11px] text-[#6B778C] mt-0.5">
                   {totalCalls(detail)} calls · last seen {lastSeenLabel(detail)}
+                  {detail.extracted_attributes?.email && (
+                    <span className="ml-2">{detail.extracted_attributes.email}</span>
+                  )}
                 </p>
-                {detail.extracted_attributes?.email && (
-                  <p className="text-[12px] text-[#555] mt-0.5">{detail.extracted_attributes.email}</p>
-                )}
               </div>
-              <span className="text-[11px] px-2 py-1 rounded border border-[#f0f0f0] text-[#555]">
+              <span className="text-[11px] px-2 py-1 rounded-[3px] border border-[#DFE1E6] text-[#6B778C]">
                 Active
               </span>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-7 py-5 space-y-5">
+            <div className="flex-1 overflow-y-auto px-8 py-6 space-y-4">
               {/* AI Summary */}
               {detail.contact_summary && (
                 <Card>
@@ -128,7 +128,7 @@ export default function ConversationsPage() {
                     <CardTitle>AI Contact Summary</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-[13px] text-[#555] leading-relaxed">
+                    <p className="text-[13px] text-[#172B4D] leading-relaxed">
                       {detail.contact_summary}
                     </p>
                   </CardContent>
@@ -145,8 +145,8 @@ export default function ConversationsPage() {
                     <div className="space-y-2">
                       {detail.memories.map((m) => (
                         <div key={m.id} className="flex gap-2 text-[13px]">
-                          <span className="text-[#bbb] mt-0.5 shrink-0">·</span>
-                          <span className="text-[#555]">{m.content}</span>
+                          <span className="text-[#6B778C] mt-0.5 shrink-0">·</span>
+                          <span className="text-[#172B4D]">{m.content}</span>
                         </div>
                       ))}
                     </div>
@@ -164,32 +164,32 @@ export default function ConversationsPage() {
                     {(detail.interactions ?? []).map((interaction, i) => (
                       <div key={interaction.id} className="flex gap-3">
                         <div className="flex flex-col items-center">
-                          <div className="w-7 h-7 rounded-full bg-[#6366f1] flex items-center justify-center shrink-0">
+                          <div className="w-7 h-7 rounded-full bg-[#0052CC] flex items-center justify-center shrink-0">
                             <Bot className="w-3.5 h-3.5 text-white" />
                           </div>
                           {i < (detail.interactions?.length ?? 0) - 1 && (
-                            <div className="w-px flex-1 bg-[#f0f0f0] my-1" />
+                            <div className="w-px flex-1 bg-[#DFE1E6] my-1" />
                           )}
                         </div>
                         <div className="flex-1 pb-3">
                           <div className="flex items-center gap-2 mb-1.5">
-                            <span className="text-[11px] text-[#bbb]">
+                            <span className="text-[11px] text-[#6B778C]">
                               {new Date(interaction.timestamp).toLocaleString("en-GB", {
                                 day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
                               })}
                             </span>
-                            <span className="text-[11px] px-1.5 py-0.5 rounded border border-[#f0f0f0] text-[#555]">
+                            <span className="text-[11px] px-1.5 py-0.5 rounded-[3px] border border-[#DFE1E6] text-[#6B778C]">
                               {interaction.channel}
                             </span>
                           </div>
-                          <div className="bg-[#fafafa] border border-[#f0f0f0] rounded-[8px] px-4 py-2.5 text-[13px] text-[#555] leading-relaxed">
+                          <div className="bg-[#F4F5F7] border border-[#DFE1E6] rounded-[3px] px-4 py-2.5 text-[13px] text-[#172B4D] leading-relaxed">
                             {interaction.interaction_summary}
                           </div>
                           {interaction.extracted_attributes &&
                             Object.keys(interaction.extracted_attributes).length > 0 && (
                               <div className="mt-1.5 flex flex-wrap gap-1.5">
                                 {Object.entries(interaction.extracted_attributes).map(([k, v]) => (
-                                  <span key={k} className="text-[11px] px-2 py-0.5 rounded border border-[#f0f0f0] text-[#999]">
+                                  <span key={k} className="text-[11px] px-2 py-0.5 rounded-[3px] border border-[#DFE1E6] text-[#6B778C]">
                                     {k}: {v}
                                   </span>
                                 ))}
@@ -199,7 +199,7 @@ export default function ConversationsPage() {
                       </div>
                     ))}
                     {(detail.interactions?.length ?? 0) === 0 && (
-                      <p className="text-[13px] text-[#bbb]">No interactions recorded yet.</p>
+                      <p className="text-[13px] text-[#6B778C]">No interactions recorded yet.</p>
                     )}
                   </div>
                 </CardContent>
@@ -209,7 +209,7 @@ export default function ConversationsPage() {
         )}
 
         {!loadingDetail && !detail && !loadingContacts && (
-          <div className="flex items-center justify-center h-full text-[#bbb]">
+          <div className="flex items-center justify-center h-full text-[#6B778C]">
             <div className="text-center">
               <User className="w-8 h-8 mx-auto mb-2 opacity-20" />
               <p className="text-[13px]">Select a contact</p>

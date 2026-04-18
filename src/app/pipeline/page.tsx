@@ -36,11 +36,11 @@ function normalizePhone(p: string) {
 const stages: Stage[] = ["New", "Engaged", "Interested", "Quote Requested", "Purchased"];
 
 const stageBar: Record<Stage, string> = {
-  New: "bg-[#0f0f0f]",
-  Engaged: "bg-[#0f0f0f]",
-  Interested: "bg-[#6366f1]",
-  "Quote Requested": "bg-[#6366f1]",
-  Purchased: "bg-[#22c55e]",
+  New: "bg-[#0052CC]",
+  Engaged: "bg-[#0052CC]",
+  Interested: "bg-[#0052CC]",
+  "Quote Requested": "bg-[#FF8B00]",
+  Purchased: "bg-[#00875A]",
 };
 
 export default function PipelinePage() {
@@ -94,104 +94,109 @@ export default function PipelinePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen text-[#bbb] gap-2 text-[13px]">
+      <div className="flex items-center justify-center h-screen text-[#6B778C] gap-2 text-[13px]">
         <RefreshCw className="w-4 h-4 animate-spin" /> Loading contacts…
       </div>
     );
   }
 
   return (
-    <div className="px-7 py-6">
-      <div className="mb-5">
-        <h1 className="text-[16px] font-semibold tracking-[-0.03em] text-[#0f0f0f]">Customer Pipeline</h1>
-        <p className="text-[11px] text-[#bbb] mt-0.5">
-          {cards.length} contacts · stages inferred from AI summaries · drag to override
-        </p>
+    <div>
+      {/* Topbar */}
+      <div className="sticky top-0 z-10 h-14 bg-white border-b border-[#DFE1E6] px-8 flex items-center shrink-0">
+        <div>
+          <h1 className="text-[20px] font-semibold text-[#172B4D]">Customer Pipeline</h1>
+          <p className="text-[12px] text-[#6B778C] mt-0.5">
+            {cards.length} contacts · stages inferred from AI summaries · drag to override
+          </p>
+        </div>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-4 min-h-[calc(100vh-10rem)]">
-        {stages.map((stage) => {
-          const stageCards = byStage(stage);
-          return (
-            <div
-              key={stage}
-              className="flex flex-col min-w-[240px] w-60 shrink-0"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={() => handleDrop(stage)}
-            >
-              {/* Column header */}
-              <div className="mb-2">
-                <div className={`h-[4px] rounded-[2px] w-full mb-2 ${stageBar[stage]}`} />
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-[12px] font-semibold text-[#0f0f0f]">{stage}</span>
-                  <span className="text-[11px] text-[#bbb]">{stageCards.length}</span>
+      <div className="px-8 py-6">
+        <div className="flex gap-4 overflow-x-auto pb-4 min-h-[calc(100vh-10rem)]">
+          {stages.map((stage) => {
+            const stageCards = byStage(stage);
+            return (
+              <div
+                key={stage}
+                className="flex flex-col min-w-[240px] w-60 shrink-0"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => handleDrop(stage)}
+              >
+                {/* Column header */}
+                <div className="mb-2">
+                  <div className={`h-[3px] w-full mb-2 ${stageBar[stage]}`} />
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[12px] font-semibold text-[#172B4D]">{stage}</span>
+                    <span className="text-[11px] text-[#6B778C]">{stageCards.length}</span>
+                  </div>
+                </div>
+
+                {/* Cards */}
+                <div className="flex-1 space-y-2 min-h-[200px]">
+                  {stageCards.map((card) => (
+                    <div
+                      key={card.id}
+                      draggable
+                      onDragStart={() => setDragging(card.id)}
+                      className="bg-white rounded-[3px] p-3 border border-[#DFE1E6] shadow-[0_1px_1px_rgba(9,30,66,0.1)] cursor-grab active:cursor-grabbing hover:border-[#0052CC] transition-colors space-y-2"
+                    >
+                      <div className="flex items-start justify-between gap-1">
+                        <div className="min-w-0">
+                          {card.fullName ? (
+                            <>
+                              <p className="text-[13px] font-medium text-[#172B4D] leading-tight truncate">{card.fullName}</p>
+                              <p className="text-[11px] text-[#6B778C] font-mono truncate">{card.phone}</p>
+                            </>
+                          ) : (
+                            <p className="text-[13px] font-medium text-[#172B4D] font-mono leading-tight truncate">{card.phone}</p>
+                          )}
+                          {card.email && (
+                            <p className="text-[11px] text-[#6B778C] truncate">{card.email}</p>
+                          )}
+                        </div>
+                        <div className="text-[11px] font-semibold text-[#6B778C] shrink-0">{card.calls}×</div>
+                      </div>
+
+                      {card.accountName && (
+                        <div className="flex items-center gap-1.5 text-[11px] text-[#6B778C]">
+                          <Building2 className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{card.accountName}</span>
+                        </div>
+                      )}
+
+                      {card.jobTitle && (
+                        <div className="flex items-center gap-1.5 text-[11px] text-[#6B778C]">
+                          <User className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{card.jobTitle}</span>
+                        </div>
+                      )}
+
+                      {!card.fullName && !card.accountName && (
+                        <div className="flex items-center gap-1.5 text-[11px] text-[#6B778C]">
+                          <Phone className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{card.phone}</span>
+                        </div>
+                      )}
+
+                      <p className="text-[11px] text-[#6B778C] leading-relaxed line-clamp-3">
+                        {card.summary}
+                      </p>
+
+                      <p className="text-[11px] text-[#6B778C]">Last: {card.lastSeen}</p>
+                    </div>
+                  ))}
+
+                  {stageCards.length === 0 && (
+                    <div className="border border-dashed border-[#DFE1E6] rounded-[3px] h-24 flex items-center justify-center">
+                      <p className="text-[11px] text-[#6B778C]">Empty</p>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {/* Cards */}
-              <div className="flex-1 space-y-2 min-h-[200px]">
-                {stageCards.map((card) => (
-                  <div
-                    key={card.id}
-                    draggable
-                    onDragStart={() => setDragging(card.id)}
-                    className="bg-white rounded-[8px] p-3 border border-[#f0f0f0] cursor-grab active:cursor-grabbing hover:border-[#e0e0e0] transition-colors space-y-2"
-                  >
-                    <div className="flex items-start justify-between gap-1">
-                      <div className="min-w-0">
-                        {card.fullName ? (
-                          <>
-                            <p className="text-[13px] font-medium text-[#0f0f0f] leading-tight truncate">{card.fullName}</p>
-                            <p className="text-[11px] text-[#bbb] font-mono truncate">{card.phone}</p>
-                          </>
-                        ) : (
-                          <p className="text-[13px] font-medium text-[#0f0f0f] font-mono leading-tight truncate">{card.phone}</p>
-                        )}
-                        {card.email && (
-                          <p className="text-[11px] text-[#999] truncate">{card.email}</p>
-                        )}
-                      </div>
-                      <div className="text-[11px] font-semibold text-[#555] shrink-0">{card.calls}×</div>
-                    </div>
-
-                    {card.accountName && (
-                      <div className="flex items-center gap-1.5 text-[11px] text-[#999]">
-                        <Building2 className="w-3 h-3 shrink-0" />
-                        <span className="truncate">{card.accountName}</span>
-                      </div>
-                    )}
-
-                    {card.jobTitle && (
-                      <div className="flex items-center gap-1.5 text-[11px] text-[#999]">
-                        <User className="w-3 h-3 shrink-0" />
-                        <span className="truncate">{card.jobTitle}</span>
-                      </div>
-                    )}
-
-                    {!card.fullName && !card.accountName && (
-                      <div className="flex items-center gap-1.5 text-[11px] text-[#bbb]">
-                        <Phone className="w-3 h-3 shrink-0" />
-                        <span className="truncate">{card.phone}</span>
-                      </div>
-                    )}
-
-                    <p className="text-[11px] text-[#999] leading-relaxed line-clamp-3">
-                      {card.summary}
-                    </p>
-
-                    <p className="text-[11px] text-[#bbb]">Last: {card.lastSeen}</p>
-                  </div>
-                ))}
-
-                {stageCards.length === 0 && (
-                  <div className="border border-dashed border-[#f0f0f0] rounded-[8px] h-24 flex items-center justify-center">
-                    <p className="text-[11px] text-[#ccc]">Empty</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );

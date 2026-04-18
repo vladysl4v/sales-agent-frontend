@@ -17,13 +17,13 @@ interface Props {
 }
 
 const tooltipStyle = {
-  contentStyle: { background: "#ffffff", border: "1px solid #f0f0f0", borderRadius: 8, fontSize: 12, color: "#0f0f0f" },
-  cursor: { fill: "rgba(0,0,0,0.03)" },
+  contentStyle: { background: "#ffffff", border: "1px solid #DFE1E6", borderRadius: 3, fontSize: 12, color: "#172B4D" },
+  cursor: { fill: "rgba(9,30,66,0.04)" },
 };
 
 export default function DashboardCharts({ hourlyData, tokenData, avgTokens, totalCalls, totalRuns }: Props) {
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-3 gap-4">
       <Card className="col-span-1">
         <CardHeader>
           <CardTitle>Agent Stats</CardTitle>
@@ -38,11 +38,11 @@ export default function DashboardCharts({ hourlyData, tokenData, avgTokens, tota
             ].map((s) => (
               <div key={s.label}>
                 <div className="flex justify-between mb-1.5">
-                  <span className="text-[11px] font-medium text-[#999] uppercase tracking-[0.02em]">{s.label}</span>
-                  <span className="text-[13px] font-semibold text-[#0f0f0f]">{s.value}</span>
+                  <span className="text-[11px] font-semibold text-[#6B778C] uppercase tracking-[0.04em]">{s.label}</span>
+                  <span className="text-[13px] font-semibold text-[#172B4D]">{s.value}</span>
                 </div>
-                <div className="h-[3px] rounded-full bg-[#f0f0f0]">
-                  <div className="h-[3px] rounded-full bg-[#6366f1]" style={{ width: "100%" }} />
+                <div className="h-[3px] rounded-full bg-[#DFE1E6]">
+                  <div className="h-[3px] rounded-full bg-[#0052CC]" style={{ width: "100%" }} />
                 </div>
               </div>
             ))}
@@ -59,15 +59,15 @@ export default function DashboardCharts({ hourlyData, tokenData, avgTokens, tota
           {hourlyData.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={hourlyData} barGap={3}>
-                <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "#ccc" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fill: "#ccc" }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "#6B778C" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: "#6B778C" }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip {...tooltipStyle} />
-                <Bar dataKey="calls" name="Calls" fill="#0f0f0f" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="failed" name="Failed" fill="#fca5a5" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="calls" name="Calls" fill="#0052CC" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="failed" name="Failed" fill="#DE350B" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-[200px] flex items-center justify-center text-[13px] text-[#bbb]">
+            <div className="h-[200px] flex items-center justify-center text-[13px] text-[#6B778C]">
               No runs yet today
             </div>
           )}
@@ -83,23 +83,23 @@ export default function DashboardCharts({ hourlyData, tokenData, avgTokens, tota
           {tokenData.length > 0 ? (
             <ResponsiveContainer width="100%" height={140}>
               <LineChart data={tokenData}>
-                <XAxis dataKey="i" tick={{ fontSize: 9, fill: "#ccc" }} axisLine={false} tickLine={false} label={{ value: "run", position: "insideRight", offset: 10, style: { fill: "#ccc", fontSize: 9 } }} />
-                <YAxis tick={{ fontSize: 9, fill: "#ccc" }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="i" tick={{ fontSize: 9, fill: "#6B778C" }} axisLine={false} tickLine={false} label={{ value: "run", position: "insideRight", offset: 10, style: { fill: "#6B778C", fontSize: 9 } }} />
+                <YAxis tick={{ fontSize: 9, fill: "#6B778C" }} axisLine={false} tickLine={false} />
                 <Tooltip
-                  contentStyle={{ background: "#ffffff", border: "1px solid #f0f0f0", borderRadius: 8, fontSize: 12, color: "#0f0f0f" }}
-                  cursor={{ stroke: "rgba(0,0,0,0.06)" }}
+                  contentStyle={{ background: "#ffffff", border: "1px solid #DFE1E6", borderRadius: 3, fontSize: 12, color: "#172B4D" }}
+                  cursor={{ stroke: "rgba(9,30,66,0.06)" }}
                 />
                 <Line
                   dataKey="tokens"
                   name="Tokens"
-                  stroke="#6366f1"
+                  stroke="#0052CC"
                   strokeWidth={1.5}
-                  dot={{ r: 3, fill: "#ffffff", stroke: "#6366f1", strokeWidth: 2 }}
+                  dot={{ r: 3, fill: "#ffffff", stroke: "#0052CC", strokeWidth: 2 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-[140px] flex items-center justify-center text-[13px] text-[#bbb]">
+            <div className="h-[140px] flex items-center justify-center text-[13px] text-[#6B778C]">
               No run data available
             </div>
           )}
