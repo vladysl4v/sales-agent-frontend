@@ -122,8 +122,23 @@ export default async function LeadList() {
       .flatMap((t) => (t.primary_contact_id ? [t.primary_contact_id] : []))
   );
 
+  const alexMurchinger: RankedContact = {
+    contact: {
+      id: "__alex_murchinger__",
+      account_id: null,
+      full_name: "Alex Murchinger",
+      job_title: "Business Development",
+      phone: null,
+      email: "alexmmuc25@gmail.com",
+      created_at: "",
+    },
+    account: null,
+    calls: 0,
+    linkedin: "https://www.linkedin.com/in/alex-murchinger/",
+  };
+
   // Outbound: all contacts with a name, excluding Karreem Battles
-  const rankedContacts: RankedContact[] = contacts
+  const dbContacts: RankedContact[] = contacts
     .filter((c) => !!c.full_name && c.full_name !== "Karreem Battles")
     .map((c) => ({
       contact: c,
@@ -132,14 +147,15 @@ export default async function LeadList() {
       linkedin: linkedinUrl(c.full_name, linkedinByContact.get(c.id) ?? null),
     }))
     .sort((a, b) => {
-      const pinScore = (name: string | null) =>
-        name === "Liam Carter" ? 2 : name === "Alex Murchinger" ? 1 : 0;
-      const pd = pinScore(b.contact.full_name) - pinScore(a.contact.full_name);
-      if (pd !== 0) return pd;
       const aOpen = openContactIds.has(a.contact.id) ? 1 : 0;
       const bOpen = openContactIds.has(b.contact.id) ? 1 : 0;
       return bOpen - aOpen || b.calls - a.calls;
     });
+
+  // Pin Liam Carter first, Alex Murchinger second, rest follows
+  const liamIdx = dbContacts.findIndex((r) => r.contact.full_name === "Liam Carter");
+  const liam = liamIdx >= 0 ? dbContacts.splice(liamIdx, 1) : [];
+  const rankedContacts: RankedContact[] = [...liam, alexMurchinger, ...dbContacts];
 
   // Inbound: aggregate call volume per company
   const callsByAccount = new Map<string, { total: number; callers: Set<string> }>();
