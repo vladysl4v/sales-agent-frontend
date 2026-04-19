@@ -14,7 +14,7 @@ const AVATAR_COLORS = [
 ];
 
 const KNOWN_LINKEDIN: Record<string, string> = {
-  "Liam Carter": "https://www.linkedin.com/in/liam-carter-323637404/",
+  "Liam Carter": "https://phantombuster.com/8494293471866236/phantoms/212276908402482/console",
   "Alex Murchinger": "https://www.linkedin.com/in/alex-murchinger/",
   "Sophie Müller": "https://www.linkedin.com/in/sophie-mueller-de/",
   "Thomas Becker": "https://www.linkedin.com/in/thomas-becker-sales/",
