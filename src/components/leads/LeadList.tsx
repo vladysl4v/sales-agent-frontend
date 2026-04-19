@@ -1,9 +1,9 @@
-import { Mail } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import {
   getTwinContacts,
   getTwinAccounts,
-  getTwinPurchases,
-  getTwinProducts,
+  getTwinThreads,
+  getContacts,
   TwinContact,
   TwinAccount,
 } from "@/lib/happyrobot";
@@ -13,96 +13,158 @@ const AVATAR_COLORS = [
   "#DE350B", "#00B8D9", "#36B37E", "#8777D9",
 ];
 
-function initials(name: string | null) {
-  if (!name) return "?";
+const KNOWN_LINKEDIN: Record<string, string> = {
+  "Liam Carter": "https://www.linkedin.com/in/liam-carter-323637404/",
+  "Karreem Battles": "https://www.linkedin.com/in/karreem-battles-231592ab/",
+  "Sophie Müller": "https://www.linkedin.com/in/sophie-mueller-de/",
+  "Thomas Becker": "https://www.linkedin.com/in/thomas-becker-sales/",
+  "Janine Wolf": "https://www.linkedin.com/in/janine-wolf-89b3aa/",
+  "Marco Ricci": "https://www.linkedin.com/in/marco-ricci-italy/",
+  "Priya Nair": "https://www.linkedin.com/in/priya-nair-b2b/",
+  "Felix Hartmann": "https://www.linkedin.com/in/felix-hartmann-muc/",
+  "Clara Jensen": "https://www.linkedin.com/in/clara-jensen-dk/",
+  "David Osei": "https://www.linkedin.com/in/david-osei-gh/",
+};
+
+function linkedinUrl(name: string | null, fromAttr: string | null): string {
+  if (fromAttr) return fromAttr;
+  if (!name) return "https://www.linkedin.com/search/results/people/";
+  if (KNOWN_LINKEDIN[name]) return KNOWN_LINKEDIN[name];
+  const slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  return `https://www.linkedin.com/in/${slug}/`;
+}
+
+function initials(name: string) {
   return name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 }
 
-function fmt(amount: number) {
-  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(amount);
+function normalizePhone(p: string) {
+  return p.replace(/[\s\-().+]/g, "");
 }
 
-function ScoreBar({ pct }: { pct: number }) {
-  const color = pct >= 70 ? "#00875A" : pct >= 30 ? "#FF8B00" : "#6B778C";
+function ScoreBar({ pct, color }: { pct: number; color?: string }) {
+  const c = color ?? (pct >= 70 ? "#00875A" : pct >= 30 ? "#FF8B00" : "#6B778C");
   return (
     <div className="w-20 h-3 bg-[#DFE1E6] rounded-[2px] overflow-hidden shrink-0">
-      <div className="h-full rounded-[2px]" style={{ width: `${pct}%`, backgroundColor: color }} />
+      <div className="h-full rounded-[2px]" style={{ width: `${pct}%`, backgroundColor: c }} />
     </div>
+  );
+}
+
+function rankBar(idx: number, total: number): { pct: number; color: string } {
+  const ratio = total > 1 ? idx / (total - 1) : 0;
+  const pct = Math.round(100 - ratio * 88); // 100 → 12
+  const color = ratio < 0.34 ? "#00875A" : ratio < 0.67 ? "#FF8B00" : "#DE350B";
+  return { pct, color };
+}
+
+function LinkedInIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="currentColor" aria-hidden>
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+    </svg>
   );
 }
 
 interface RankedContact {
   contact: TwinContact;
   account: TwinAccount | null;
-  units: number;
-  total: number;
+  calls: number;
+  linkedin: string;
 }
 
 interface RankedAccount {
   account: TwinAccount;
-  units: number;
-  total: number;
+  inboundCalls: number;
+  callerCount: number;
 }
 
 export default async function LeadList() {
-  const [contacts, accounts, purchases, products] = await Promise.all([
+  const [contacts, accounts, threads, hrContacts] = await Promise.all([
     getTwinContacts(),
     getTwinAccounts(),
-    getTwinPurchases(),
-    getTwinProducts(),
+    getTwinThreads(),
+    getContacts(),
   ]);
 
   const accountMap = new Map(accounts.map((a) => [a.id, a]));
-  const productMap = new Map(products.map((p) => [p.id, parseFloat(p.price) || 0]));
 
-  // Aggregate purchases per contact
-  const byContact = new Map<string, { units: number; total: number }>();
-  for (const p of purchases) {
-    if (!p.contact_id) continue;
-    const cur = byContact.get(p.contact_id) ?? { units: 0, total: 0 };
-    const qty = p.quantity ?? 0;
-    cur.units += qty;
-    // prefer stored total/unit_price; fall back to product catalogue price
-    const lineTotal = p.total
-      ? parseFloat(p.total)
-      : p.unit_price
-      ? parseFloat(p.unit_price) * qty
-      : (productMap.get(p.product_id) ?? 0) * qty;
-    cur.total += lineTotal;
-    byContact.set(p.contact_id, cur);
+  // Match HR contacts to Twin contacts by phone
+  const twinByPhone = new Map(
+    contacts.filter((c) => c.phone).map((c) => [normalizePhone(c.phone!), c])
+  );
+
+  const callsByContact = new Map<string, number>();
+  const linkedinByContact = new Map<string, string>();
+
+  for (const hr of hrContacts) {
+    const twin = twinByPhone.get(normalizePhone(hr.value));
+    if (!twin) continue;
+
+    const calls = hr.interactions_count?.call ?? 0;
+    callsByContact.set(twin.id, (callsByContact.get(twin.id) ?? 0) + calls);
+
+    // Pick up LinkedIn from any of the common attribute key names
+    const attrs = hr.extracted_attributes ?? {};
+    const li =
+      attrs.linkedin ??
+      attrs.linkedin_url ??
+      attrs.linkedin_profile ??
+      attrs.LinkedIn ??
+      null;
+    if (li) linkedinByContact.set(twin.id, li);
   }
 
+  // Contacts with open threads (still to contact)
+  const openContactIds = new Set(
+    threads
+      .filter((t) => t.status === "new" || t.status === "in_progress")
+      .flatMap((t) => (t.primary_contact_id ? [t.primary_contact_id] : []))
+  );
+
+  // Outbound: all contacts with a name, Liam Carter pinned first then open-thread ones
   const rankedContacts: RankedContact[] = contacts
+    .filter((c) => !!c.full_name)
     .map((c) => ({
       contact: c,
       account: c.account_id ? (accountMap.get(c.account_id) ?? null) : null,
-      units: byContact.get(c.id)?.units ?? 0,
-      total: byContact.get(c.id)?.total ?? 0,
+      calls: callsByContact.get(c.id) ?? 0,
+      linkedin: linkedinUrl(c.full_name, linkedinByContact.get(c.id) ?? null),
     }))
-    .sort((a, b) => b.total - a.total || b.units - a.units);
+    .sort((a, b) => {
+      const aPin = a.contact.full_name === "Liam Carter" ? 1 : 0;
+      const bPin = b.contact.full_name === "Liam Carter" ? 1 : 0;
+      if (aPin !== bPin) return bPin - aPin;
+      const aOpen = openContactIds.has(a.contact.id) ? 1 : 0;
+      const bOpen = openContactIds.has(b.contact.id) ? 1 : 0;
+      return bOpen - aOpen || b.calls - a.calls;
+    });
 
-  // Aggregate purchases per company via contact's account_id
-  const byAccount = new Map<string, { units: number; total: number }>();
+  // Inbound: aggregate call volume per company
+  const callsByAccount = new Map<string, { total: number; callers: Set<string> }>();
   for (const c of contacts) {
     if (!c.account_id) continue;
-    const cp = byContact.get(c.id);
-    if (!cp) continue;
-    const cur = byAccount.get(c.account_id) ?? { units: 0, total: 0 };
-    cur.units += cp.units;
-    cur.total += cp.total;
-    byAccount.set(c.account_id, cur);
+    const calls = callsByContact.get(c.id) ?? 0;
+    if (calls === 0) continue;
+    const cur = callsByAccount.get(c.account_id) ?? { total: 0, callers: new Set() };
+    cur.total += calls;
+    cur.callers.add(c.id);
+    callsByAccount.set(c.account_id, cur);
   }
 
   const rankedAccounts: RankedAccount[] = accounts
-    .map((a) => ({
-      account: a,
-      units: byAccount.get(a.id)?.units ?? 0,
-      total: byAccount.get(a.id)?.total ?? 0,
-    }))
-    .sort((a, b) => b.total - a.total || b.units - a.units);
+    .map((a) => {
+      const agg = callsByAccount.get(a.id);
+      return {
+        account: a,
+        inboundCalls: agg?.total ?? 0,
+        callerCount: agg?.callers.size ?? 0,
+      };
+    })
+    .sort((a, b) => b.inboundCalls - a.inboundCalls || b.callerCount - a.callerCount);
 
-  const maxContact = rankedContacts[0]?.total || 1;
-  const maxAccount = rankedAccounts[0]?.total || 1;
+  const maxCalls = Math.max(...rankedContacts.map((r) => r.calls), 1);
+  const maxInbound = Math.max(...rankedAccounts.map((r) => r.inboundCalls), 1);
 
   return (
     <div>
@@ -111,10 +173,10 @@ export default async function LeadList() {
       </div>
 
       <div className="px-8 py-6 space-y-8">
-        {/* ── Contacts ── */}
+        {/* ── Outbound Contacts ── */}
         <section>
           <p className="text-[11px] font-semibold text-[#6B778C] uppercase tracking-widest mb-3">
-            Contacts · ranked by purchase value
+            Outbound · {rankedContacts.length} contacts
           </p>
           <div className="bg-white border border-[#DFE1E6] rounded-[3px] shadow-[0_1px_1px_rgba(9,30,66,0.1)] divide-y divide-[#DFE1E6]">
             {rankedContacts.map((rc, idx) => (
@@ -123,37 +185,46 @@ export default async function LeadList() {
                   className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold text-white shrink-0"
                   style={{ backgroundColor: AVATAR_COLORS[idx % AVATAR_COLORS.length] }}
                 >
-                  {initials(rc.contact.full_name)}
+                  {initials(rc.contact.full_name!)}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <p className="text-[14px] font-semibold text-[#172B4D] truncate">
-                    {rc.contact.full_name ?? rc.contact.phone ?? "Unknown"}
+                    {rc.contact.full_name}
                   </p>
                   <p className="text-[12px] text-[#6B778C] truncate">
                     {[rc.contact.job_title, rc.account?.name].filter(Boolean).join(" · ")}
                   </p>
                 </div>
 
-                <div className="text-right shrink-0 w-32">
-                  <p className="text-[13px] font-semibold text-[#172B4D]">
-                    {rc.total > 0 ? fmt(rc.total) : "—"}
-                  </p>
-                  <p className="text-[11px] text-[#6B778C]">
-                    {rc.units > 0 ? `${rc.units} units` : "no purchases"}
-                  </p>
+                <div className="text-right shrink-0 w-28">
+                  {rc.calls > 0 && (
+                    <>
+                      <p className="text-[13px] font-semibold text-[#172B4D]">{rc.calls} calls</p>
+                      <p className="text-[11px] text-[#6B778C]">interactions</p>
+                    </>
+                  )}
                 </div>
 
-                <ScoreBar pct={maxContact > 0 ? Math.round((rc.total / maxContact) * 100) : 0} />
+                <ScoreBar {...rankBar(idx, rankedContacts.length)} />
 
-                <div className="flex items-center gap-1.5 shrink-0 w-16 justify-end">
+                <div className="flex items-center gap-3 shrink-0 ml-4 justify-end">
+                  <a
+                    href={rc.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 h-7 px-2.5 rounded-[3px] text-[12px] font-medium text-[#6B778C] border border-[#DFE1E6] bg-white hover:border-[#0A66C2] hover:text-[#0A66C2] transition-colors whitespace-nowrap"
+                  >
+                    <LinkedInIcon />
+                    LinkedIn Activity
+                  </a>
                   {rc.contact.email && (
                     <a
                       href={`mailto:${rc.contact.email}`}
-                      className="flex items-center gap-1.5 h-7 px-2.5 rounded-[3px] text-[12px] font-medium text-[#6B778C] border border-[#DFE1E6] bg-white hover:border-[#0052CC] hover:text-[#0052CC] transition-colors"
+                      className="flex items-center gap-1.5 h-7 px-2.5 rounded-[3px] text-[12px] font-medium text-[#6B778C] border border-[#DFE1E6] bg-white hover:border-[#0052CC] hover:text-[#0052CC] transition-colors whitespace-nowrap"
                     >
                       <Mail className="w-3.5 h-3.5" />
-                      Mail
+                      Mail Activity
                     </a>
                   )}
                 </div>
@@ -162,10 +233,10 @@ export default async function LeadList() {
           </div>
         </section>
 
-        {/* ── Companies ── */}
+        {/* ── Inbound Potential · Companies ── */}
         <section>
           <p className="text-[11px] font-semibold text-[#6B778C] uppercase tracking-widest mb-3">
-            Companies · ranked by total purchase value
+            Inbound Potential · Companies ranked by call volume
           </p>
           <div className="bg-white border border-[#DFE1E6] rounded-[3px] shadow-[0_1px_1px_rgba(9,30,66,0.1)] divide-y divide-[#DFE1E6]">
             {rankedAccounts.map((ra, idx) => (
@@ -184,18 +255,22 @@ export default async function LeadList() {
                   </p>
                 </div>
 
-                <div className="text-right shrink-0 w-32">
+                <div className="text-right shrink-0 w-28">
                   <p className="text-[13px] font-semibold text-[#172B4D]">
-                    {ra.total > 0 ? fmt(ra.total) : "—"}
+                    {ra.inboundCalls > 0 ? `${ra.inboundCalls} calls` : "—"}
                   </p>
                   <p className="text-[11px] text-[#6B778C]">
-                    {ra.units > 0 ? `${ra.units} units` : "no purchases"}
+                    {ra.callerCount > 0
+                      ? `${ra.callerCount} ${ra.callerCount === 1 ? "caller" : "callers"}`
+                      : "no inbound"}
                   </p>
                 </div>
 
-                <ScoreBar pct={maxAccount > 0 ? Math.round((ra.total / maxAccount) * 100) : 0} />
+                <ScoreBar pct={maxInbound > 0 ? Math.round((ra.inboundCalls / maxInbound) * 100) : 0} />
 
-                <div className="w-16 shrink-0" />
+                <div className="flex items-center gap-1.5 shrink-0 w-16 justify-end">
+                  <Phone className="w-3.5 h-3.5 text-[#6B778C]" />
+                </div>
               </div>
             ))}
           </div>

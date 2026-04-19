@@ -8,17 +8,15 @@ import {
   Kanban,
   MessageSquare,
   GitBranch,
-  FlaskConical,
   Users,
 } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/leads", label: "Leads", icon: Users },
   { href: "/pipeline", label: "Pipeline", icon: Kanban },
   { href: "/conversations", label: "Conversations", icon: MessageSquare },
   { href: "/trace", label: "Agent Trace", icon: GitBranch },
-  { href: "/abtesting", label: "A/B Testing", icon: FlaskConical },
+  { href: "/leads", label: "Leads", icon: Users },
 ];
 
 export default function Sidebar() {
