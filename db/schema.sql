@@ -266,7 +266,8 @@ INSERT INTO contacts (id, account_id, full_name, job_title, phone, email) VALUES
 ('c0000001-0000-0000-0000-000000000005', 'a0000001-0000-0000-0000-000000000002', 'Damien Rigby',    'Fleet Strategic Account Mgr',  '+44 121 555-0133', 'd.rigby@mercedes-benz.co.uk'),
 ('c0000001-0000-0000-0000-000000000006', 'a0000001-0000-0000-0000-000000000003', 'Fabio Madeddu',   'Fleet Account Manager',        '+39 02 555-0261', 'f.madeddu@giacomel-audi.it'),
 ('c0000001-0000-0000-0000-000000000007', 'a0000001-0000-0000-0000-000000000003', 'James Douglas',   'Head of Fleet Sales',          '+44 118 555-0219', 'j.douglas@audi.co.uk'),
-('c0000001-0000-0000-0000-000000000008', 'a0000001-0000-0000-0000-000000000004', 'Sam Ragheb',      'Fleet Strategic Account Mgr',  '+44 161 555-0088', 's.ragheb@vw-group.com');
+('c0000001-0000-0000-0000-000000000008', 'a0000001-0000-0000-0000-000000000004', 'Sam Ragheb',      'Fleet Strategic Account Mgr',  '+44 161 555-0088', 's.ragheb@vw-group.com'),
+('c0000001-0000-0000-0000-000000000009', 'a0000001-0000-0000-0000-000000000001', 'Liam Carter',     'Senior Sales Executive',       '+49 89 555-0322',  'l.carter@bmwgroup.com');
 
 INSERT INTO contact_auth (contact_id, code_phrase) VALUES
   ('c0000001-0000-0000-0000-000000000001', '774112'),
@@ -276,7 +277,8 @@ INSERT INTO contact_auth (contact_id, code_phrase) VALUES
   ('c0000001-0000-0000-0000-000000000005', '330156'),
   ('c0000001-0000-0000-0000-000000000006', '416703'),
   ('c0000001-0000-0000-0000-000000000007', '629841'),
-  ('c0000001-0000-0000-0000-000000000008', '957034');
+  ('c0000001-0000-0000-0000-000000000008', '957034'),
+  ('c0000001-0000-0000-0000-000000000009', '103847');
 
 INSERT INTO purchases (contact_id, product_id, quantity, confirmed_at) VALUES
 
@@ -310,4 +312,10 @@ INSERT INTO purchases (contact_id, product_id, quantity, confirmed_at) VALUES
 
 -- Sam Ragheb (VW)
 ('c0000001-0000-0000-0000-000000000008', 'falken-ziex-21555r17',            400, '2026-02-14 08:00:00+00'),
-('c0000001-0000-0000-0000-000000000008', 'good-vector4s-gen3-21560r16',     180, '2026-04-05 10:45:00+00');
+('c0000001-0000-0000-0000-000000000008', 'good-vector4s-gen3-21560r16',     180, '2026-04-05 10:45:00+00'),
+
+-- Liam Carter (BMW Group) — top buyer (~€130,625; ~20% above previous leader)
+('c0000001-0000-0000-0000-000000000009', 'mich-crossclimate2-22545r17',     300, '2026-01-15 09:00:00+00'),
+('c0000001-0000-0000-0000-000000000009', 'cont-premiumcontact7-22545r18',   250, '2026-02-20 11:30:00+00'),
+('c0000001-0000-0000-0000-000000000009', 'brid-turanza6-22545r18',          200, '2026-03-18 14:00:00+00'),
+('c0000001-0000-0000-0000-000000000009', 'good-eagle-f1-25540r19',           25, '2026-04-08 10:00:00+00');
