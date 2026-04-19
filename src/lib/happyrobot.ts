@@ -239,11 +239,18 @@ export interface TwinThreadProduct {
 async function getTwinTable<T>(tableName: string, limit = 100): Promise<T[]> {
   const res = await fetch(`${BASE}/twin/tables/${tableName}?limit=${limit}`, {
     headers: authHeaders(),
-    next: { revalidate: 30 },
+    next: { revalidate: 5 },
   });
   if (!res.ok) throw new Error(`HappyRobot twin/${tableName}: ${res.status}`);
   const json = await res.json();
   return json.rows ?? [];
+}
+
+export interface TwinProduct {
+  id: string;
+  name: string;
+  brand: string;
+  price: string;
 }
 
 export const getTwinThreads = () => getTwinTable<TwinThread>("threads");
@@ -251,3 +258,4 @@ export const getTwinPurchases = () => getTwinTable<TwinPurchase>("purchases");
 export const getTwinAccounts = () => getTwinTable<TwinAccount>("accounts");
 export const getTwinContacts = () => getTwinTable<TwinContact>("contacts");
 export const getTwinThreadProducts = () => getTwinTable<TwinThreadProduct>("thread_products");
+export const getTwinProducts = () => getTwinTable<TwinProduct>("products", 500);
