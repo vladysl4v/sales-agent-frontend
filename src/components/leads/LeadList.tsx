@@ -2,7 +2,8 @@ import { Mail, Phone } from "lucide-react";
 import {
   getTwinContacts,
   getTwinAccounts,
-  getTwinThreads,
+  getTwinPurchases,
+  getTwinProducts,
   getContacts,
   TwinContact,
   TwinAccount,
@@ -51,12 +52,6 @@ function ScoreBar({ pct, color }: { pct: number; color?: string }) {
   );
 }
 
-function rankBar(idx: number, total: number): { pct: number; color: string } {
-  const ratio = total > 1 ? idx / (total - 1) : 0;
-  const pct = Math.round(100 - ratio * 88); // 100 → 12
-  const color = ratio < 0.34 ? "#00875A" : ratio < 0.67 ? "#FF8B00" : "#DE350B";
-  return { pct, color };
-}
 
 function LinkedInIcon() {
   return (
@@ -69,58 +64,69 @@ function LinkedInIcon() {
 interface RankedContact {
   contact: TwinContact;
   account: TwinAccount | null;
-  calls: number;
+  total: number;
+  units: number;
+  companyTotal: number;
+  companyUnits: number;
   linkedin: string;
 }
 
 interface RankedAccount {
   account: TwinAccount;
-  inboundCalls: number;
-  callerCount: number;
+  total: number;
+  units: number;
 }
 
 export default async function LeadList() {
-  const [contacts, accounts, threads, hrContacts] = await Promise.all([
+  const [contacts, accounts, purchases, products, hrContacts] = await Promise.all([
     getTwinContacts(),
     getTwinAccounts(),
-    getTwinThreads(),
+    getTwinPurchases(),
+    getTwinProducts(),
     getContacts(),
   ]);
 
   const accountMap = new Map(accounts.map((a) => [a.id, a]));
+  const productMap = new Map(products.map((p) => [p.id, parseFloat(p.price) || 0]));
 
-  // Match HR contacts to Twin contacts by phone
+  // Match HR contacts to Twin contacts by phone (for LinkedIn extraction)
   const twinByPhone = new Map(
     contacts.filter((c) => c.phone).map((c) => [normalizePhone(c.phone!), c])
   );
-
-  const callsByContact = new Map<string, number>();
   const linkedinByContact = new Map<string, string>();
-
   for (const hr of hrContacts) {
     const twin = twinByPhone.get(normalizePhone(hr.value));
     if (!twin) continue;
-
-    const calls = hr.interactions_count?.call ?? 0;
-    callsByContact.set(twin.id, (callsByContact.get(twin.id) ?? 0) + calls);
-
-    // Pick up LinkedIn from any of the common attribute key names
     const attrs = hr.extracted_attributes ?? {};
-    const li =
-      attrs.linkedin ??
-      attrs.linkedin_url ??
-      attrs.linkedin_profile ??
-      attrs.LinkedIn ??
-      null;
+    const li = attrs.linkedin ?? attrs.linkedin_url ?? attrs.linkedin_profile ?? attrs.LinkedIn ?? null;
     if (li) linkedinByContact.set(twin.id, li);
   }
 
-  // Contacts with open threads (still to contact)
-  const openContactIds = new Set(
-    threads
-      .filter((t) => t.status === "new" || t.status === "in_progress")
-      .flatMap((t) => (t.primary_contact_id ? [t.primary_contact_id] : []))
-  );
+  // Aggregate purchases per contact
+  const byContact = new Map<string, { units: number; total: number }>();
+  for (const p of purchases) {
+    if (!p.contact_id) continue;
+    const lineTotal =
+      parseFloat(p.total) ||
+      (parseFloat(p.unit_price) || 0) * p.quantity ||
+      (productMap.get(p.product_id) ?? 0) * p.quantity;
+    const cur = byContact.get(p.contact_id) ?? { units: 0, total: 0 };
+    cur.units += p.quantity;
+    cur.total += lineTotal;
+    byContact.set(p.contact_id, cur);
+  }
+
+  // Aggregate purchases per account (sum of all contacts in that account)
+  const byAccount = new Map<string, { units: number; total: number }>();
+  for (const c of contacts) {
+    if (!c.account_id) continue;
+    const cv = byContact.get(c.id);
+    if (!cv) continue;
+    const cur = byAccount.get(c.account_id) ?? { units: 0, total: 0 };
+    cur.units += cv.units;
+    cur.total += cv.total;
+    byAccount.set(c.account_id, cur);
+  }
 
   const alexMurchinger: RankedContact = {
     contact: {
@@ -133,55 +139,45 @@ export default async function LeadList() {
       created_at: "",
     },
     account: null,
-    calls: 0,
+    total: 0,
+    units: 0,
+    companyTotal: 0,
+    companyUnits: 0,
     linkedin: "https://www.linkedin.com/in/alex-murchinger/",
   };
 
   // Outbound: all contacts with a name, excluding Karreem Battles
   const dbContacts: RankedContact[] = contacts
     .filter((c) => !!c.full_name && c.full_name !== "Karreem Battles")
-    .map((c) => ({
-      contact: c,
-      account: c.account_id ? (accountMap.get(c.account_id) ?? null) : null,
-      calls: callsByContact.get(c.id) ?? 0,
-      linkedin: linkedinUrl(c.full_name, linkedinByContact.get(c.id) ?? null),
-    }))
-    .sort((a, b) => {
-      const aOpen = openContactIds.has(a.contact.id) ? 1 : 0;
-      const bOpen = openContactIds.has(b.contact.id) ? 1 : 0;
-      return bOpen - aOpen || b.calls - a.calls;
-    });
+    .map((c) => {
+      const cv = byContact.get(c.id) ?? { units: 0, total: 0 };
+      const av = c.account_id ? (byAccount.get(c.account_id) ?? cv) : cv;
+      return {
+        contact: c,
+        account: c.account_id ? (accountMap.get(c.account_id) ?? null) : null,
+        total: cv.total,
+        units: cv.units,
+        companyTotal: av.total,
+        companyUnits: av.units,
+        linkedin: linkedinUrl(c.full_name, linkedinByContact.get(c.id) ?? null),
+      };
+    })
+    .sort((a, b) => b.companyTotal - a.companyTotal || b.total - a.total || b.units - a.units);
 
   // Pin Liam Carter first, Alex Murchinger second, rest follows
   const liamIdx = dbContacts.findIndex((r) => r.contact.full_name === "Liam Carter");
   const liam = liamIdx >= 0 ? dbContacts.splice(liamIdx, 1) : [];
   const rankedContacts: RankedContact[] = [...liam, alexMurchinger, ...dbContacts];
 
-  // Inbound: aggregate call volume per company
-  const callsByAccount = new Map<string, { total: number; callers: Set<string> }>();
-  for (const c of contacts) {
-    if (!c.account_id) continue;
-    const calls = callsByContact.get(c.id) ?? 0;
-    if (calls === 0) continue;
-    const cur = callsByAccount.get(c.account_id) ?? { total: 0, callers: new Set() };
-    cur.total += calls;
-    cur.callers.add(c.id);
-    callsByAccount.set(c.account_id, cur);
-  }
-
+  // Companies ranked by total revenue
   const rankedAccounts: RankedAccount[] = accounts
     .map((a) => {
-      const agg = callsByAccount.get(a.id);
-      return {
-        account: a,
-        inboundCalls: agg?.total ?? 0,
-        callerCount: agg?.callers.size ?? 0,
-      };
+      const av = byAccount.get(a.id) ?? { units: 0, total: 0 };
+      return { account: a, total: av.total, units: av.units };
     })
-    .sort((a, b) => b.inboundCalls - a.inboundCalls || b.callerCount - a.callerCount);
+    .sort((a, b) => b.total - a.total || b.units - a.units);
 
-  const maxCalls = Math.max(...rankedContacts.map((r) => r.calls), 1);
-  const maxInbound = Math.max(...rankedAccounts.map((r) => r.inboundCalls), 1);
+  const maxAccountTotal = Math.max(...rankedAccounts.map((r) => r.total), 1);
 
   return (
     <div>
@@ -213,17 +209,6 @@ export default async function LeadList() {
                     {[rc.contact.job_title, rc.account?.name].filter(Boolean).join(" · ")}
                   </p>
                 </div>
-
-                <div className="text-right shrink-0 w-28">
-                  {rc.calls > 0 && (
-                    <>
-                      <p className="text-[13px] font-semibold text-[#172B4D]">{rc.calls} calls</p>
-                      <p className="text-[11px] text-[#6B778C]">interactions</p>
-                    </>
-                  )}
-                </div>
-
-                <ScoreBar {...rankBar(idx, rankedContacts.length)} />
 
                 <div className="flex items-center gap-3 shrink-0 ml-4 justify-end">
                   <a
@@ -259,7 +244,7 @@ export default async function LeadList() {
         {/* ── Inbound Potential · Companies ── */}
         <section>
           <p className="text-[11px] font-semibold text-[#6B778C] uppercase tracking-widest mb-3">
-            Inbound Potential · Companies ranked by call volume
+            Companies · Ranked by revenue
           </p>
           <div className="bg-white border border-[#DFE1E6] rounded-[3px] shadow-[0_1px_1px_rgba(9,30,66,0.1)] divide-y divide-[#DFE1E6]">
             {rankedAccounts.map((ra, idx) => (
@@ -280,16 +265,16 @@ export default async function LeadList() {
 
                 <div className="text-right shrink-0 w-28">
                   <p className="text-[13px] font-semibold text-[#172B4D]">
-                    {ra.inboundCalls > 0 ? `${ra.inboundCalls} calls` : "—"}
+                    {ra.total > 0
+                      ? `$${ra.total.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+                      : "—"}
                   </p>
                   <p className="text-[11px] text-[#6B778C]">
-                    {ra.callerCount > 0
-                      ? `${ra.callerCount} ${ra.callerCount === 1 ? "caller" : "callers"}`
-                      : "no inbound"}
+                    {ra.units > 0 ? `${ra.units} units` : "no purchases"}
                   </p>
                 </div>
 
-                <ScoreBar pct={maxInbound > 0 ? Math.round((ra.inboundCalls / maxInbound) * 100) : 0} />
+                <ScoreBar pct={maxAccountTotal > 0 ? Math.round((ra.total / maxAccountTotal) * 100) : 0} />
 
                 <div className="flex items-center gap-1.5 shrink-0 w-16 justify-end">
                   <Phone className="w-3.5 h-3.5 text-[#6B778C]" />
