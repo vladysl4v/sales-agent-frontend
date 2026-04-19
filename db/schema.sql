@@ -220,8 +220,6 @@ CREATE TABLE purchases (
   contact_id   UUID REFERENCES contacts(id) ON DELETE SET NULL,
   product_id   TEXT REFERENCES products(id),
   quantity     INTEGER,
-  unit_price   NUMERIC(10,2),
-  total        NUMERIC(10,2) GENERATED ALWAYS AS (quantity * unit_price) STORED,
   confirmed_at TIMESTAMPTZ DEFAULT now()
 );
 

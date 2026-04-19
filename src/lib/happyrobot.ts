@@ -1,6 +1,8 @@
 const BASE = process.env.HAPPYROBOT_BASE_URL!;
+const CHAT_BASE = process.env.HAPPYROBOT_CHAT_BASE_URL ?? BASE;
 const KEY = process.env.HAPPYROBOT_API_KEY!;
 export const PHONE_AGENT_ID = process.env.HAPPYROBOT_PHONE_AGENT_ID!;
+export const TEXT_AGENT_ID = process.env.HAPPYROBOT_TEXT_AGENT_ID!;
 
 function authHeaders() {
   return { Authorization: `Bearer ${KEY}` };
@@ -97,10 +99,87 @@ export async function getContactMemories(id: string): Promise<HRMemory[]> {
 
 export async function getPhoneAgentRuns(): Promise<HRRun[]> {
   const res = await fetch(
-    `${BASE}/runs?use_case_id=${PHONE_AGENT_ID}&page_size=100`,
+    `${BASE}/workflows/${PHONE_AGENT_ID}/runs?page_size=100`,
     { headers: authHeaders(), next: { revalidate: 30 } }
   );
   if (!res.ok) throw new Error(`HappyRobot runs: ${res.status}`);
+  const json = await res.json();
+  return json.data ?? [];
+}
+
+export interface HRRunNode {
+  output_id: string;
+  run_id: string;
+  name: string;
+  node_type: string;
+  status: string;
+  timestamp: string;
+}
+
+export interface HRRunNodeOutput {
+  id: string;
+  name: string;
+  node_type: string;
+  status: string;
+  timestamp: string;
+  data: Record<string, unknown>;
+  input: Record<string, unknown> | null;
+}
+
+export interface ParsedMessage {
+  role: "user" | "assistant" | "event";
+  content: string;
+}
+
+export async function getRunNodes(runId: string): Promise<HRRunNode[]> {
+  const res = await fetch(`${BASE}/runs/${runId}/nodes`, {
+    headers: authHeaders(),
+    next: { revalidate: 60 },
+  });
+  if (!res.ok) throw new Error(`HappyRobot run nodes: ${res.status}`);
+  const json = await res.json();
+  return json.data ?? [];
+}
+
+export async function getRunNodeOutput(runId: string, outputId: string): Promise<HRRunNodeOutput> {
+  const res = await fetch(`${BASE}/runs/${runId}/outputs/${outputId}`, {
+    headers: authHeaders(),
+    next: { revalidate: 60 },
+  });
+  if (!res.ok) throw new Error(`HappyRobot run output: ${res.status}`);
+  const json = await res.json();
+  return json.data;
+}
+
+export function parseTranscript(transcript: string): ParsedMessage[] {
+  return transcript
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      if (line.startsWith("Assistant:")) return { role: "assistant" as const, content: line.slice("Assistant:".length).trim() };
+      if (line.startsWith("User:")) return { role: "user" as const, content: line.slice("User:".length).trim() };
+      return { role: "event" as const, content: line };
+    });
+}
+
+export async function getRunTranscript(runId: string): Promise<ParsedMessage[]> {
+  const nodes = await getRunNodes(runId);
+  const actionNodes = nodes.filter((n) => n.node_type === "action");
+  for (const node of actionNodes) {
+    const output = await getRunNodeOutput(runId, node.output_id);
+    const transcript = output.data?.transcript as string | undefined;
+    if (transcript) return parseTranscript(transcript);
+  }
+  return [];
+}
+
+export async function getTextAgentRuns(): Promise<HRRun[]> {
+  const res = await fetch(
+    `${BASE}/workflows/${TEXT_AGENT_ID}/runs?page_size=100`,
+    { headers: authHeaders(), next: { revalidate: 30 } }
+  );
+  if (!res.ok) throw new Error(`HappyRobot text runs: ${res.status}`);
   const json = await res.json();
   return json.data ?? [];
 }
