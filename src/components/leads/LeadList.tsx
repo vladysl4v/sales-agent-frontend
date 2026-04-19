@@ -15,17 +15,19 @@ interface Lead {
   name: string;
   role: string;
   company: string;
+  linkedin: string;
 }
 
 const LEADS: Lead[] = [
-  { id: "1", name: "Markus Brandt",  role: "Managing Director",   company: "Reifen Brandt GmbH" },
-  { id: "2", name: "Sandra Koch",    role: "Workplace Safety",     company: "ATU Auto-Teile-Unger" },
-  { id: "3", name: "Peter Hoffmann", role: "Branch Manager",       company: "Vergölst GmbH" },
-  { id: "4", name: "Julia Mayer",    role: "HSE Officer",          company: "Euromaster GmbH" },
-  { id: "5", name: "Stefan Wolf",    role: "Operations Manager",   company: "Reifen Wolf KG" },
-  { id: "6", name: "Klaus Fischer",  role: "Safety Officer",       company: "Point S Deutschland" },
-  { id: "7", name: "Monika Schulz",  role: "Managing Director",   company: "Reifendiscount24 GmbH" },
-  { id: "8", name: "Andreas Braun",  role: "Workshop Manager",     company: "Reifen Braun & Söhne" },
+  { id: "1", name: "Liam Carter",    role: "Senior Sales Executive", company: "BMW Group",     linkedin: "https://www.linkedin.com/in/liam-carter-323637404" },
+  { id: "2", name: "Markus Brandt",  role: "Managing Director",    company: "Reifen Brandt GmbH",        linkedin: "https://www.linkedin.com/in/markus-brandt-491823" },
+  { id: "3", name: "Sandra Koch",    role: "Workplace Safety",     company: "ATU Auto-Teile-Unger",      linkedin: "https://www.linkedin.com/in/sandra-koch-hse-874512" },
+  { id: "4", name: "Peter Hoffmann", role: "Branch Manager",       company: "Vergölst GmbH",             linkedin: "https://www.linkedin.com/in/peter-hoffmann-vergoelst-330847" },
+  { id: "5", name: "Julia Mayer",    role: "HSE Officer",          company: "Euromaster GmbH",           linkedin: "https://www.linkedin.com/in/julia-mayer-663291" },
+  { id: "6", name: "Stefan Wolf",    role: "Operations Manager",   company: "Reifen Wolf KG",            linkedin: "https://www.linkedin.com/in/stefan-wolf-ops-221074" },
+  { id: "7", name: "Klaus Fischer",  role: "Safety Officer",       company: "Point S Deutschland",       linkedin: "https://www.linkedin.com/in/klaus-fischer-safety-558103" },
+  { id: "8", name: "Monika Schulz",  role: "Managing Director",    company: "Reifendiscount24 GmbH",     linkedin: "https://www.linkedin.com/in/monika-schulz-rd24-147390" },
+  { id: "9", name: "Andreas Braun",  role: "Workshop Manager",     company: "Reifen Braun & Söhne",      linkedin: "https://www.linkedin.com/in/andreas-braun-werkstatt-992641" },
 ];
 
 const AVATAR_COLORS = [
@@ -62,10 +64,21 @@ export default function LeadList() {
                 <p className="text-[12px] text-[#6B778C] truncate">{lead.role} · {lead.company}</p>
               </div>
 
+              {/* Score bar */}
+              {(() => {
+                const pct = Math.round(((LEADS.length - idx) / LEADS.length) * 100);
+                const color = pct >= 70 ? "#00875A" : pct >= 40 ? "#FF8B00" : "#DE350B";
+                return (
+                  <div className="w-14 h-4 bg-[#DFE1E6] rounded-[2px] overflow-hidden shrink-0 mx-4">
+                    <div className="h-full rounded-[2px]" style={{ width: `${pct}%`, backgroundColor: color }} />
+                  </div>
+                );
+              })()}
+
               {/* Actions */}
               <div className="flex items-center gap-1.5 shrink-0 ml-auto">
                 <a
-                  href={`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(lead.name + " " + lead.company)}`}
+                  href={lead.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 h-7 px-2.5 rounded-[3px] text-[12px] font-medium text-[#6B778C] border border-[#DFE1E6] bg-white hover:border-[#0052CC] hover:text-[#0052CC] transition-colors"
