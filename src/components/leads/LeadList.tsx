@@ -1,3 +1,5 @@
+"use client";
+
 import { Mail } from "lucide-react";
 import {
   getTwinContacts,
@@ -148,13 +150,13 @@ export default async function LeadList() {
 
                 <div className="flex items-center gap-1.5 shrink-0 w-16 justify-end">
                   {rc.contact.email && (
-                    <a
-                      href={`mailto:${rc.contact.email}`}
+                    <button
+                      onClick={() => fetch(`https://hook.eu1.make.com/ibm7x8rxbj7yqh6c6oi43t8hlxi7dga3?email=${encodeURIComponent(rc.contact.email!)}`)}
                       className="flex items-center gap-1.5 h-7 px-2.5 rounded-[3px] text-[12px] font-medium text-[#6B778C] border border-[#DFE1E6] bg-white hover:border-[#0052CC] hover:text-[#0052CC] transition-colors"
                     >
                       <Mail className="w-3.5 h-3.5" />
                       Mail
-                    </a>
+                    </button>
                   )}
                 </div>
               </div>

@@ -267,7 +267,7 @@ INSERT INTO contacts (id, account_id, full_name, job_title, phone, email) VALUES
 ('c0000001-0000-0000-0000-000000000006', 'a0000001-0000-0000-0000-000000000003', 'Fabio Madeddu',   'Fleet Account Manager',        '+39 02 555-0261', 'f.madeddu@giacomel-audi.it'),
 ('c0000001-0000-0000-0000-000000000007', 'a0000001-0000-0000-0000-000000000003', 'James Douglas',   'Head of Fleet Sales',          '+44 118 555-0219', 'j.douglas@audi.co.uk'),
 ('c0000001-0000-0000-0000-000000000008', 'a0000001-0000-0000-0000-000000000004', 'Sam Ragheb',      'Fleet Strategic Account Mgr',  '+44 161 555-0088', 's.ragheb@vw-group.com'),
-('c0000001-0000-0000-0000-000000000009', 'a0000001-0000-0000-0000-000000000001', 'Liam Carter',     'Senior Sales Executive',       '+49 89 555-0322',  'l.carter@bmwgroup.com');
+('c0000001-0000-0000-0000-000000000009', 'a0000001-0000-0000-0000-000000000001', 'Liam Carter',     'Senior Sales Executive',       '+49 89 555-0322',  'dragoncityfacebookgems@gmail.com');
 
 INSERT INTO contact_auth (contact_id, code_phrase) VALUES
   ('c0000001-0000-0000-0000-000000000001', '774112'),
