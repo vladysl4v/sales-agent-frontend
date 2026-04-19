@@ -236,75 +236,78 @@ CREATE TABLE thread_products (
 -- MOCK DATA
 -- ─────────────────────────────────────────
 
-INSERT INTO accounts (id, name, country, website) VALUES
-  ('a0000000-0000-0000-0000-000000000001', 'BMW Group',          'Germany', 'https://www.bmwgroup.com'),
-  ('a0000000-0000-0000-0000-000000000002', 'Mercedes-Benz AG',   'Germany', 'https://www.mercedes-benz.com'),
-  ('a0000000-0000-0000-0000-000000000003', 'Volkswagen Group',   'Germany', 'https://www.volkswagenag.com'),
-  ('a0000000-0000-0000-0000-000000000004', 'Stellantis NV',      'Netherlands', 'https://www.stellantis.com');
+-- INSERT INTO accounts (id, name, country, website) VALUES
+--   ('a0000000-0000-0000-0000-000000000001', 'BMW Group',          'Germany', 'https://www.bmwgroup.com'),
+--   ('a0000000-0000-0000-0000-000000000002', 'Mercedes-Benz AG',   'Germany', 'https://www.mercedes-benz.com'),
+--   ('a0000000-0000-0000-0000-000000000003', 'Volkswagen Group',   'Germany', 'https://www.volkswagenag.com'),
+--   ('a0000000-0000-0000-0000-000000000004', 'Stellantis NV',      'Netherlands', 'https://www.stellantis.com');
 
+-- INSERT INTO contacts (id, account_id, full_name, job_title, phone, email) VALUES
+--   ('c0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'Klaus Berger',  'Global Purchasing Director', '+49 89 3820 1100', 'k.berger@bmwgroup.com'),
+--   ('c0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000001', 'Anna Richter',  'R&D Engineering Lead',       '+49 89 3820 1201', 'a.richter@bmwgroup.com'),
+--   ('c0000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000002', 'Stefan Wolf',   'Procurement Manager',        '+49 711 1720 3300', 's.wolf@mercedes-benz.com'),
+--   ('c0000000-0000-0000-0000-000000000004', 'a0000000-0000-0000-0000-000000000003', 'Petra Koch',    'Supply Chain Director',      '+49 5361 9 4400',  'p.koch@volkswagen.de'),
+--   ('c0000000-0000-0000-0000-000000000005', 'a0000000-0000-0000-0000-000000000004', 'Marc Dubois',   'Fleet Procurement Lead',     '+31 20 4442 5500', 'm.dubois@stellantis.com'),
+--   ('c0000000-0000-0000-0000-000000000006', NULL,                                   NULL,            NULL,                         '+49 30 9988 7766', NULL);
+
+-- ACCOUNTS
+INSERT INTO accounts (id, name, country, website) VALUES
+('a0000001-0000-0000-0000-000000000001', 'BMW Group',            'Germany', 'https://www.bmwgroup.com'),
+('a0000001-0000-0000-0000-000000000002', 'Mercedes-Benz',        'Germany', 'https://www.mercedes-benz.com'),
+('a0000001-0000-0000-0000-000000000003', 'Audi AG',              'Germany', 'https://www.audi.com'),
+('a0000001-0000-0000-0000-000000000004', 'Volkswagen Group',     'Germany', 'https://www.volkswagen-group.com');
+
+-- CONTACTS
 INSERT INTO contacts (id, account_id, full_name, job_title, phone, email) VALUES
-  ('c0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'Klaus Berger',  'Global Purchasing Director', '+49 89 3820 1100', 'k.berger@bmwgroup.com'),
-  ('c0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000001', 'Anna Richter',  'R&D Engineering Lead',       '+49 89 3820 1201', 'a.richter@bmwgroup.com'),
-  ('c0000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000002', 'Stefan Wolf',   'Procurement Manager',        '+49 711 1720 3300', 's.wolf@mercedes-benz.com'),
-  ('c0000000-0000-0000-0000-000000000004', 'a0000000-0000-0000-0000-000000000003', 'Petra Koch',    'Supply Chain Director',      '+49 5361 9 4400',  'p.koch@volkswagen.de'),
-  ('c0000000-0000-0000-0000-000000000005', 'a0000000-0000-0000-0000-000000000004', 'Marc Dubois',   'Fleet Procurement Lead',     '+31 20 4442 5500', 'm.dubois@stellantis.com'),
-  ('c0000000-0000-0000-0000-000000000006', NULL,                                   NULL,            NULL,                         '+49 30 9988 7766', NULL);
+('c0000001-0000-0000-0000-000000000001', 'a0000001-0000-0000-0000-000000000001', 'Karreem Battles', 'Fleet Sales Manager',          '+1 205 555-0183', 'k.battles@bmwdealer.com'),
+('c0000001-0000-0000-0000-000000000002', 'a0000001-0000-0000-0000-000000000001', 'Lance Walker',    'Fleet Sales Manager',          '+44 28 555-0174', 'l.walker@bmw-agnew.com'),
+('c0000001-0000-0000-0000-000000000003', 'a0000001-0000-0000-0000-000000000002', 'Sally Dennis',    'National Fleet Sales Manager', '+44 20 555-0392', 's.dennis@mercedes-benz.co.uk'),
+('c0000001-0000-0000-0000-000000000004', 'a0000001-0000-0000-0000-000000000002', 'James O''Reilly', 'Fleet Strategic Account Mgr',  '+44 131 555-0047', 'j.oreilly@mercedes-benz.co.uk'),
+('c0000001-0000-0000-0000-000000000005', 'a0000001-0000-0000-0000-000000000002', 'Damien Rigby',    'Fleet Strategic Account Mgr',  '+44 121 555-0133', 'd.rigby@mercedes-benz.co.uk'),
+('c0000001-0000-0000-0000-000000000006', 'a0000001-0000-0000-0000-000000000003', 'Fabio Madeddu',   'Fleet Account Manager',        '+39 02 555-0261', 'f.madeddu@giacomel-audi.it'),
+('c0000001-0000-0000-0000-000000000007', 'a0000001-0000-0000-0000-000000000003', 'James Douglas',   'Head of Fleet Sales',          '+44 118 555-0219', 'j.douglas@audi.co.uk'),
+('c0000001-0000-0000-0000-000000000008', 'a0000001-0000-0000-0000-000000000004', 'Sam Ragheb',      'Fleet Strategic Account Mgr',  '+44 161 555-0088', 's.ragheb@vw-group.com');
 
 INSERT INTO contact_auth (contact_id, code_phrase) VALUES
-  ('c0000000-0000-0000-0000-000000000001', '774112'),
-  ('c0000000-0000-0000-0000-000000000002', '220934'),
-  ('c0000000-0000-0000-0000-000000000003', '551287'),
-  ('c0000000-0000-0000-0000-000000000004', '883409'),
-  ('c0000000-0000-0000-0000-000000000005', '330156');
+  ('c0000001-0000-0000-0000-000000000001', '774112'),
+  ('c0000001-0000-0000-0000-000000000002', '220934'),
+  ('c0000001-0000-0000-0000-000000000003', '551287'),
+  ('c0000001-0000-0000-0000-000000000004', '883409'),
+  ('c0000001-0000-0000-0000-000000000005', '330156'),
+  ('c0000001-0000-0000-0000-000000000006', '416703'),
+  ('c0000001-0000-0000-0000-000000000007', '629841'),
+  ('c0000001-0000-0000-0000-000000000008', '957034');
 
-INSERT INTO threads (id, account_id, primary_contact_id, title, description, status) VALUES
-  ('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'BMW 3/5 Series Winter Stock Q4',     NULL, 'confirmed_purchase'),
-  ('b0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002', 'BMW iX EV Tyre Evaluation',          NULL, 'in_progress'),
-  ('b0000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000003', 'Mercedes AMG Summer Line 2026',      NULL, 'in_progress'),
-  ('b0000000-0000-0000-0000-000000000004', 'a0000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000004', 'VW Group All-Season Fleet Program',  NULL, 'new'),
-  ('b0000000-0000-0000-0000-000000000005', 'a0000000-0000-0000-0000-000000000004', 'c0000000-0000-0000-0000-000000000005', 'Stellantis Fleet Winter Rotation',   NULL, 'confirmed_purchase'),
-  ('b0000000-0000-0000-0000-000000000006', NULL,                                   'c0000000-0000-0000-0000-000000000006', NULL,                                 NULL, 'new');
+INSERT INTO purchases (contact_id, product_id, quantity, confirmed_at) VALUES
 
-INSERT INTO call_logs (run_id, contact_id, thread_id, completed_at, phone_number, transcript) VALUES
-  ('d0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', '2026-04-10 14:32:00+00', '+49 89 3820 1100',
-   '[{"role":"agent","text":"Thanks for calling Vanquish Tyres, this is Alex. Who am I speaking with today?","spoken_at":"2026-04-10T14:28:00Z"},{"role":"contact","text":"Klaus Berger, BMW Group purchasing.","spoken_at":"2026-04-10T14:28:12Z"},{"role":"agent","text":"Klaus, great to hear from you. Are you calling about the winter stock rotation for Q4?","spoken_at":"2026-04-10T14:28:20Z"},{"role":"contact","text":"Exactly. We need 400 sets of Michelin Alpin 6 in 225/45 R17 by end of October.","spoken_at":"2026-04-10T14:28:45Z"},{"role":"agent","text":"Got it. I can confirm stock and have a formal quote over to you within 24 hours. Shall I send it to your procurement email?","spoken_at":"2026-04-10T14:29:10Z"},{"role":"contact","text":"Yes please. And include lead times.","spoken_at":"2026-04-10T14:29:30Z"}]'),
+-- Karreem Battles (BMW)
+('c0000001-0000-0000-0000-000000000001', 'cont-wc-ts870-20555r16',          320, '2026-01-12 09:30:00+00'),
+('c0000001-0000-0000-0000-000000000001', 'mich-crossclimate2-22545r17',     180, '2026-02-03 11:00:00+00'),
 
-  ('d0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000002', 'b0000000-0000-0000-0000-000000000002', '2026-04-15 10:18:00+00', '+49 89 3820 1201',
-   '[{"role":"agent","text":"Hi, this is Alex from Vanquish Tyres. I noticed BMW iX is expanding this year — are you evaluating EV tyre suppliers for that platform?","spoken_at":"2026-04-15T10:14:00Z"},{"role":"contact","text":"We are actually. The acoustic requirement is the main issue — most suppliers don''t have a suitable option.","spoken_at":"2026-04-15T10:14:30Z"},{"role":"agent","text":"We carry the Michelin Pilot Sport EV and Bridgestone Turanza 6 EV — both have acoustic foam inserts specifically for EV cabins. Can I send you the spec sheets?","spoken_at":"2026-04-15T10:14:55Z"},{"role":"contact","text":"Yes, and include noise level data if you have it.","spoken_at":"2026-04-15T10:15:20Z"}]'),
+-- Lance Walker (BMW)
+('c0000001-0000-0000-0000-000000000002', 'good-ultragrip9-18565r15',        500, '2026-01-08 14:00:00+00'),
+('c0000001-0000-0000-0000-000000000002', 'hank-kinergy4s2-22550r18',        220, '2026-03-15 10:30:00+00'),
 
-  ('d0000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000005', 'b0000000-0000-0000-0000-000000000005', '2026-04-08 09:45:00+00', '+31 20 4442 5500',
-   '[{"role":"agent","text":"Hi Marc, Alex from Vanquish Tyres. Following up on the winter fleet rotation — did you get a chance to review the quote I sent?","spoken_at":"2026-04-08T09:41:00Z"},{"role":"contact","text":"Yes, we''re going ahead. 250 sets of Goodyear UltraGrip 9+ in 185/65 R15.","spoken_at":"2026-04-08T09:41:40Z"},{"role":"agent","text":"Perfect. I''ll confirm the order and send a delivery schedule. Expected dispatch within 5 business days.","spoken_at":"2026-04-08T09:42:00Z"}]');
+-- Sally Dennis (Mercedes)
+('c0000001-0000-0000-0000-000000000003', 'cont-premiumcontact7-22545r18',   400, '2026-02-18 08:45:00+00'),
+('c0000001-0000-0000-0000-000000000003', 'mich-pilot-ev-25545r21',          120, '2026-03-22 13:00:00+00'),
 
-INSERT INTO messages (thread_id, contact_id, channel, direction, body, sent_at) VALUES
-  ('b0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000002', 'chat', 'outbound', 'Hi Anna, following up on the BMW iX EV tyre evaluation. I have spec sheets ready for the Michelin Pilot Sport EV and Bridgestone Turanza 6 EV. Want me to send them over?', '2026-04-15 11:00:00+00'),
-  ('b0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000002', 'chat', 'inbound',  'Yes please. Also need load index confirmation for iX xDrive50.', '2026-04-15 11:22:00+00'),
-  ('b0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000002', 'chat', 'outbound', 'Michelin Pilot Sport EV 255/45 R21 — load index 106, speed rating Y. Fully covers the iX xDrive50 spec. Bridgestone option is 235/45 R20, load index 100. I''d recommend the Michelin for that platform.', '2026-04-15 11:35:00+00'),
-  ('b0000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000003', 'sms',  'outbound', 'Hi Stefan, Alex from Vanquish. Sending over the Bridgestone Potenza S001 and Continental SportContact 6 specs for the AMG summer line. Let me know if you need staggered fitment options.', '2026-04-16 09:00:00+00'),
-  ('b0000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000003', 'sms',  'inbound',  'Thanks. We need staggered — 235/40 R19 front, 265/35 R18 rear. Can you cover both?', '2026-04-16 09:45:00+00'),
-  ('b0000000-0000-0000-0000-000000000004', 'c0000000-0000-0000-0000-000000000004', 'chat', 'outbound', 'Hi Petra, reaching out about the VW Group all-season fleet program. We have the Michelin CrossClimate 2 and Continental AllSeasonContact 2 in volume — both 3PMSF certified. Worth a quick call?', '2026-04-17 08:30:00+00'),
-  ('b0000000-0000-0000-0000-000000000004', 'c0000000-0000-0000-0000-000000000004', 'chat', 'inbound',  'Send me pricing for 500 sets of CrossClimate 2 in 225/45 R17 first.', '2026-04-17 10:15:00+00');
+-- James O'Reilly (Mercedes Scotland)
+('c0000001-0000-0000-0000-000000000004', 'pir-sottozero3-24540r18',         160, '2026-01-20 09:00:00+00'),
+('c0000001-0000-0000-0000-000000000004', 'noki-hakka-r3-22545r18',           90, '2026-02-10 16:00:00+00'),
 
-INSERT INTO thread_products (thread_id, product_id, priority) VALUES
-  -- BMW 3/5 Winter Stock — Michelin Alpin 6 primary, Continental WinterContact as backup
-  ('b0000000-0000-0000-0000-000000000001', 'mich-alpinea5-22545r17',    1),
-  ('b0000000-0000-0000-0000-000000000001', 'cont-wc-ts870-20555r16',    2),
+-- Damien Rigby (Mercedes Midlands)
+('c0000001-0000-0000-0000-000000000005', 'mich-primacy4-21555r17',          300, '2026-03-05 10:00:00+00'),
+('c0000001-0000-0000-0000-000000000005', 'cont-allseasoncontact2-20555r16', 200, '2026-03-28 14:30:00+00'),
 
-  -- BMW iX EV — Michelin EV primary, Bridgestone EV secondary
-  ('b0000000-0000-0000-0000-000000000002', 'mich-pilot-ev-25545r21',    1),
-  ('b0000000-0000-0000-0000-000000000002', 'brid-turanza6-ev-23545r20', 2),
+-- Fabio Madeddu (Audi Italy)
+('c0000001-0000-0000-0000-000000000006', 'brid-potenza-s001-23540r19',       80, '2026-02-25 11:30:00+00'),
+('c0000001-0000-0000-0000-000000000006', 'cont-sc7-20555r16',               240, '2026-04-01 09:15:00+00'),
 
-  -- Mercedes AMG staggered — Potenza S001 front, SportContact 6 rear
-  ('b0000000-0000-0000-0000-000000000003', 'brid-potenza-s001-23540r19', 1),
-  ('b0000000-0000-0000-0000-000000000003', 'cont-sc6-26535r18',          2),
+-- James Douglas (Audi UK)
+('c0000001-0000-0000-0000-000000000007', 'cont-eccontact7-19560r16',        350, '2026-01-30 15:00:00+00'),
+('c0000001-0000-0000-0000-000000000007', 'good-eagle-f1-25540r19',          100, '2026-03-10 12:00:00+00'),
 
-  -- VW All-Season — CrossClimate 2 primary, AllSeasonContact 2 backup
-  ('b0000000-0000-0000-0000-000000000004', 'mich-crossclimate2-22545r17',      1),
-  ('b0000000-0000-0000-0000-000000000004', 'cont-allseasoncontact2-20555r16',  2),
-
-  -- Stellantis Winter — UltraGrip 9+ primary, Blizzak LM005 backup
-  ('b0000000-0000-0000-0000-000000000005', 'good-ultragrip9-18565r15',    1),
-  ('b0000000-0000-0000-0000-000000000005', 'brid-blizzak-lm005-19565r15', 2);
-
-INSERT INTO purchases (thread_id, contact_id, product_id, quantity, unit_price, confirmed_at) VALUES
-  ('b0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'mich-alpinea5-22545r17',  400, 172.00, '2026-04-10 15:00:00+00'),
-  ('b0000000-0000-0000-0000-000000000005', 'c0000000-0000-0000-0000-000000000005', 'good-ultragrip9-18565r15', 250, 79.00, '2026-04-08 10:00:00+00');
+-- Sam Ragheb (VW)
+('c0000001-0000-0000-0000-000000000008', 'falken-ziex-21555r17',            400, '2026-02-14 08:00:00+00'),
+('c0000001-0000-0000-0000-000000000008', 'good-vector4s-gen3-21560r16',     180, '2026-04-05 10:45:00+00');
