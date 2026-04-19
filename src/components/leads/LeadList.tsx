@@ -15,7 +15,7 @@ const AVATAR_COLORS = [
 
 const KNOWN_LINKEDIN: Record<string, string> = {
   "Liam Carter": "https://www.linkedin.com/in/liam-carter-323637404/",
-  "Karreem Battles": "https://www.linkedin.com/in/karreem-battles-231592ab/",
+  "Alex Murchinger": "https://www.linkedin.com/in/alex-murchinger/",
   "Sophie Müller": "https://www.linkedin.com/in/sophie-mueller-de/",
   "Thomas Becker": "https://www.linkedin.com/in/thomas-becker-sales/",
   "Janine Wolf": "https://www.linkedin.com/in/janine-wolf-89b3aa/",
@@ -122,9 +122,9 @@ export default async function LeadList() {
       .flatMap((t) => (t.primary_contact_id ? [t.primary_contact_id] : []))
   );
 
-  // Outbound: all contacts with a name, Liam Carter pinned first then open-thread ones
+  // Outbound: all contacts with a name, excluding Karreem Battles
   const rankedContacts: RankedContact[] = contacts
-    .filter((c) => !!c.full_name)
+    .filter((c) => !!c.full_name && c.full_name !== "Karreem Battles")
     .map((c) => ({
       contact: c,
       account: c.account_id ? (accountMap.get(c.account_id) ?? null) : null,
@@ -132,9 +132,10 @@ export default async function LeadList() {
       linkedin: linkedinUrl(c.full_name, linkedinByContact.get(c.id) ?? null),
     }))
     .sort((a, b) => {
-      const aPin = a.contact.full_name === "Liam Carter" ? 1 : 0;
-      const bPin = b.contact.full_name === "Liam Carter" ? 1 : 0;
-      if (aPin !== bPin) return bPin - aPin;
+      const pinScore = (name: string | null) =>
+        name === "Liam Carter" ? 2 : name === "Alex Murchinger" ? 1 : 0;
+      const pd = pinScore(b.contact.full_name) - pinScore(a.contact.full_name);
+      if (pd !== 0) return pd;
       const aOpen = openContactIds.has(a.contact.id) ? 1 : 0;
       const bOpen = openContactIds.has(b.contact.id) ? 1 : 0;
       return bOpen - aOpen || b.calls - a.calls;
@@ -218,9 +219,15 @@ export default async function LeadList() {
                     <LinkedInIcon />
                     LinkedIn Activity
                   </a>
-                  {rc.contact.email && (
+                  {(rc.contact.email || rc.contact.full_name === "Alex Murchinger") && (
                     <a
-                      href={`mailto:${rc.contact.email}`}
+                      href={
+                        rc.contact.full_name === "Alex Murchinger"
+                          ? "https://hook.eu1.make.com/ibm7x8rxbj7yqh6c6oi43t8hlxi7dga3?email=alexmmuc25@gmail.com"
+                          : `mailto:${rc.contact.email}`
+                      }
+                      target={rc.contact.full_name === "Alex Murchinger" ? "_blank" : undefined}
+                      rel={rc.contact.full_name === "Alex Murchinger" ? "noopener noreferrer" : undefined}
                       className="flex items-center gap-1.5 h-7 px-2.5 rounded-[3px] text-[12px] font-medium text-[#6B778C] border border-[#DFE1E6] bg-white hover:border-[#0052CC] hover:text-[#0052CC] transition-colors whitespace-nowrap"
                     >
                       <Mail className="w-3.5 h-3.5" />
